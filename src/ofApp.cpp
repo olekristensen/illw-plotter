@@ -40,9 +40,9 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     
-    testFont.load("machtgth.ttf", 8, true, true, true);
+    plotFont.load("machtgth.ttf", 20, true, true, true);
 
-    hp.setup( "/dev/tty.usbserial-FT5CHURVB" );
+    plotter.setup( "/dev/tty.usbserial-FT5CHURVB" );
     
     // notice in the main.cpp file that the window dimensions are the same ratio as 11x17
     // if you want to change the input width or height ( defaults to window dimensions) //
@@ -52,30 +52,40 @@ void ofApp::setup(){
     int windowW = 1200;
     int windowH = (float)windowW * (float)(sqrt(2.0));
     ofSetWindowShape( windowH, windowW );
-    hp.setInputWidth( windowH );
-    hp.setInputHeight( windowW );
-    hp.enableCapture();
-    hp.setPen(1);
-    //hp.setPenVelocity(1.0);
-    ofSetVerticalSync(false);
-    ofSetFrameRate(120);
+    plotter.setInputWidth( windowH );
+    plotter.setInputHeight( windowW );
+    plotter.setPenColor(1, ofColor::darkBlue);
+    plotter.setPenColor(2, ofColor::black);
+    plotter.enableCapture();
+    plotter.setPen(1);
+    //plotter.setPenVelocity(1.0);
+    
+    float height = plotter.getInputHeight();
+    float width = plotter.getInputWidth();
+    halfHeight = height * 0.5;
+    radius = height / 6.;
+    margin = height / 10.;
+    startPoint.set(width-(margin+radius), halfHeight);
+    endPoint.set(margin+radius, halfHeight);
+    
     
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    hp.update();
+    
+    plotter.update();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+    ofBackground(255, 255);
     ofSetColor(0, 255);
-    testFont.drawString(ofToString(ofGetFrameRate()), 20, 40);
-    
-    ofPushMatrix();
-    hp.draw();
-    ofPopMatrix();
+    ofNoFill();
+    plotFont.drawStringAsShapes(ofToString(ofGetFrameRate()), 20, 40);
+    ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
+    plotter.draw();
 }
 
 //--------------------------------------------------------------
@@ -86,48 +96,149 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
     if( key == 'c' ) {
-        hp.circle(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()), ofRandom(2,500));
+        plotter.circle(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()), ofRandom(2,500));
     }
     if(key == 'l'){
-        float height = hp.getInputHeight();
-        float width = hp.getInputWidth();
+        float height = plotter.getInputHeight();
+        float width = plotter.getInputWidth();
         float halfHeight = height * 0.5;
         float radius = height / 6.;
         float margin = height / 10.;
-        /*
-        hp.setPen(1);
         
-        hp.line(margin+radius, halfHeight, width-(margin+radius), halfHeight);
-        hp.circle(margin+radius, halfHeight,radius);
-        hp.circle(width-(margin+radius), halfHeight,radius);
-*/
+        plotter.setPen(1);
+        
+        plotter.line(margin+radius, halfHeight, width-(margin+radius), halfHeight);
+        plotter.circle(margin+radius, halfHeight,radius);
+        plotter.circle(width-(margin+radius), halfHeight,radius);
         
         for(int i = 0; i <= 60; i++) {
             float lineWidth = (width - (2*(margin+radius)));
             float step = lineWidth / (60.0);
             float x = margin+radius+(step*i);
-            //hp.setPen(1);
-            //hp.line(x, halfHeight-10, x, halfHeight+10);
+            plotter.setPen(1);
+            plotter.line(x, halfHeight-10, x, halfHeight+10);
             
-            auto chars = testFont.getStringAsPoints(ofToString(i));
-            float numberwidth = testFont.getStringBoundingBox(ofToString(i), 0, 0).width;
-            hp.setPen(2);
+            auto chars = plotFont.getStringAsPoints(ofToString(i));
+            float numberwidth = plotFont.getStringBoundingBox(ofToString(i), 0, 0).width;
+            plotter.setPen(2);
             for (auto c : chars){
                 c.rotate(-90, ofVec3f(0,0,1));
                 c.translate(ofPoint(x-(numberwidth*0.5), halfHeight+30));
                 auto o = c.getOutline();
                 for (auto p : o){
                     p.simplify(0.05);
-                    hp.polyline(p);
+                    plotter.polyline(p);
                 }
             }
             
         }
     }
+    if(key == 't') {
+        plotter.clear();
+        plotter.enableCapture();
+        float x = plotter.getInputWidth()/4.0;
+        float y = 200;
+        plotter.setPen(2);
+        plotter.line(x-10,y, x+10, y);
+        plotter.line(x,y-10, x, y+10);
+        plotter.circle(x, y, 5);
+        plotText("this text is left baseline", plotFont, ofPoint(x,y), 180);
+        plotter.setPen(1);
+        plotText("this text is left baseline", plotFont, ofPoint(x,y));
+        y+=300;
+        plotter.setPen(2);
+        plotter.line(x-10,y, x+10, y);
+        plotter.line(x,y-10, x, y+10);
+        plotter.circle(x, y, 5);
+        plotText("this text is center baseline", plotFont, ofPoint(x,y), 180,CENTER);
+        plotter.setPen(1);
+        plotText("this text is center baseline", plotFont, ofPoint(x,y), 0,CENTER);
+        y+=300;
+        plotter.setPen(2);
+        plotter.line(x-10,y, x+10, y);
+        plotter.line(x,y-10, x, y+10);
+        plotter.circle(x, y, 5);
+        plotText("this text is right baseline", plotFont, ofPoint(x,y), 180,RIGHT);
+        plotter.setPen(1);
+        plotText("this text is right baseline", plotFont, ofPoint(x,y), 0,RIGHT);
+        x*=3;
+        y=200;
+        plotter.setPen(2);
+        plotter.line(x-10,y, x+10, y);
+        plotter.line(x,y-10, x, y+10);
+        plotter.circle(x, y, 5);
+        plotText("This text is left top", plotFont, ofPoint(x,y), 180,LEFT, TOP);
+        plotter.setPen(1);
+        plotText("This text is left top", plotFont, ofPoint(x,y), 0,LEFT, TOP);
+        y+=300;
+        plotter.setPen(2);
+        plotter.line(x-10,y, x+10, y);
+        plotter.line(x,y-10, x, y+10);
+        plotter.circle(x, y, 5);
+        plotText("This text is center middle", plotFont, ofPoint(x,y), 180,CENTER, MIDDLE);
+        plotter.setPen(1);
+        plotText("This text is center middle", plotFont, ofPoint(x,y), 0,CENTER, MIDDLE);
+        y+=300;
+        plotter.setPen(2);
+        plotter.line(x-10,y, x+10, y);
+        plotter.line(x,y-10, x, y+10);
+        plotter.circle(x, y, 5);
+        plotText("this text is right bottom", plotFont, ofPoint(x,y), 180,RIGHT, BOTTOM);
+        plotter.setPen(1);
+        plotText("this text is right bottom", plotFont, ofPoint(x,y), 0,RIGHT, BOTTOM);
+
+    }
+    if ( key == 'n') {
+        float r = margin/3.0;
+        float c = r/10.0;
+        float x = plotter.getInputWidth()-(margin/1.5);
+        float y = halfHeight;
+        plotter.circle(x, y, r);
+        plotter.circle(x,y,r/10.0);
+        plotter.line(x, y-c, x+r, y);
+        plotter.line(x, y+c, x+r, y);
+        plotter.line(x, y-c, x-r, y);
+        plotter.line(x, y+c, x-r, y);
+    }
     if( key == 'p' ) {
-        hp.print();
+        plotter.print();
     }
 
+}
+
+void ofApp::plotText(string str, ofTrueTypeFont font, ofPoint pos, float rotation, TextAlignment alignment, TextVerticalAlignment valign){
+
+    float mHeight = font.getStringBoundingBox("m", 0, 0).height;
+    auto chars = font.getStringAsPoints(str);
+    auto bb = font.getStringBoundingBox(str, 0, 0);
+    for (auto c : chars){
+        if(alignment == LEFT){
+            // noting to be done
+        } else if(alignment == CENTER) {
+            c.translate(ofPoint(-bb.width/2.0, 0));
+        } else if(alignment == RIGHT){
+            c.translate(ofPoint(-bb.width, 0));
+        }
+        if(valign == TOP){
+            c.translate(ofPoint(0, font.getSize()));
+        } else if (valign == MIDDLE){
+            c.translate(ofPoint(0, mHeight/2.0));
+        } else if (valign == BOTTOM){
+            c.translate(ofPoint(0, font.getDescenderHeight()));
+        } else if (valign == BASELINE){
+         // nothing to be done
+        }
+        
+        c.rotate(rotation, ofVec3f(0,0,1));
+        
+        c.translate(pos);
+
+        auto o = c.getOutline();
+        for (auto p : o){
+            p.simplify(0.05);
+            plotter.polyline(p);
+        }
+    }
 }
 
 //--------------------------------------------------------------

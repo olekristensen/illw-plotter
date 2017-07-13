@@ -189,8 +189,9 @@ void ofApp::keyReleased(int key){
 
     }
     if ( key == 'n') {
+        // north compass
         float r = margin/3.0;
-        float c = r/10.0;
+        float c = r/7.0;
         float x = plotter.getInputWidth()-(margin/1.5);
         float y = halfHeight;
         plotter.circle(x, y, r);
@@ -199,6 +200,7 @@ void ofApp::keyReleased(int key){
         plotter.line(x, y+c, x+r, y);
         plotter.line(x, y-c, x-r, y);
         plotter.line(x, y+c, x-r, y);
+        plotText("N", plotFont, ofPoint(x-r*1.2,y), -90, CENTER);
     }
     if( key == 'p' ) {
         plotter.print();

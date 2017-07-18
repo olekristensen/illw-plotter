@@ -3,13 +3,19 @@
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807,
+    "7ED0D15754D9EE08B829B967643A20055B98F6F4" : 9223372036854775807,
+    "6DFDEEAED5C97364A7A859C0B354E13F95C94005" : 9223372036854775807,
     "E79AC8F85D79EF0945F6D75FEF552EFB26F49E2C" : 9223372036854775807,
-    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807
+    "A4B2B4422B32074CDD7FABA8BC493A66417E3647" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "6875A176-C98A-4A30-B635-FAEB427FEDFF",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4F3EA2AB-F302-45D3-928E-5960C55CE6E0",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
+    "7ED0D15754D9EE08B829B967643A20055B98F6F4" : "..\/..\/addons\/ofxGeo",
+    "6DFDEEAED5C97364A7A859C0B354E13F95C94005" : "..\/..\/addons\/ofxTime",
     "E79AC8F85D79EF0945F6D75FEF552EFB26F49E2C" : "..\/..\/addons\/ofxHPGL",
-    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui"
+    "A4B2B4422B32074CDD7FABA8BC493A66417E3647" : "..\/..\/addons\/ofxGeographicLib"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "hamPlotter",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -19,6 +25,21 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/jvcleave\/ofxImGui.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "55505DE6675E1AEB4CF72AD63A972936EC984D97"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxTime.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "6DFDEEAED5C97364A7A859C0B354E13F95C94005"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxGeo",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "7ED0D15754D9EE08B829B967643A20055B98F6F4"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxGeographicLib.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A4B2B4422B32074CDD7FABA8BC493A66417E3647"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NickHardeman\/ofxHPGL.git",

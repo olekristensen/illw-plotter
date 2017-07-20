@@ -4,3 +4,10 @@ ofxHPGL
 ofxImGui
 ofxSvg
 ofxTime
+ofxJSONRPC
+ofxIO
+ofxPoco
+ofxHTTP
+ofxSSLManager
+ofxMediaType
+ofxNetworkUtils

@@ -6,11 +6,11 @@
 #include "ofxTime.h"
 #include "ofxGeographicLib.h"
 #include "ofxImGui.h"
+#include "ofxJSONRPC.h"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
-
-class Lighthouse{
+class Location{
 public:
     string name;
     string country;
@@ -22,8 +22,8 @@ public:
 
 class LogEntry{
 public:
-    Lighthouse source;
-    Lighthouse destination;
+    Location source;
+    Location destination;
     string notes;
     Poco::DateTime timestamp;
 };
@@ -47,15 +47,18 @@ public:
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
-        
-    ofxHPGL plotter;
-    ofPath path;
+    
+    void setupGui();
+    bool loadLighthouses(string xmlFilePath);
+    
+    // LIGHTHOUSE DATA
     
     ofXml lighthouseXml;
     
-    Lighthouse location;
-    vector<Lighthouse> lighthouses;
+    vector<Location> locations;
     vector<LogEntry> log;
+
+    Location lighthouse;
 
     enum TextAlignment {
         LEFT = 0,
@@ -70,7 +73,12 @@ public:
         BASELINE
     };
     
+    // PLOTTER
+    
+    ofxHPGL plotter;
+    
     ofTrueTypeFont plotFont;
+    
     void plotText(string str, ofTrueTypeFont font, ofPoint pos=ofPoint(0,0), float size=20, float rotation=0, TextAlignment alignment = LEFT, TextVerticalAlignment valign = BASELINE);
 
     ofPoint startPoint;
@@ -79,8 +87,18 @@ public:
     float radius;
     float halfHeight;
     
+    // GUI
+    
     ofxImGui::Gui gui;
     int guiColumnWidth = 250;
+    
+    // SERVER
+    
+    // We use a mutex to protect any variables that can be
+    // modified by multiple clients.  In our case, userText must be protected.
+    // We mark the mutex as mutable so that it can be used in const functions.
+    mutable std::mutex mutex;
+
 
 };
 

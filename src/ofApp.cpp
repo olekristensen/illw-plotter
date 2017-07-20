@@ -1,174 +1,27 @@
 #include "ofApp.h"
 
+
+//TODO:
 /*
  
- Wiring using Roline dsub9 female to dsub 25 male
- 
- Roline:
- 
- dsub  9 - dsub 25
- 1 - 8
- 2 - 3
- 3 - 2
- 4 - 20
- 5 - 7
- 6 - 6
- 7 - 4
- 8 - 5
- 9 - 22
- 
- 9 pin converter cable for Roline:
- 
- Roline
- plotter - V - cable  - serial port
- 20 - 4 - blue   - 1
- 2 - 3 - yellow - 2
- 3 - 2 - red    - 3
- 5 - 8 - brown  - 4
- 8 - 1 - green  - 4
- 7 - 5 - purple - 5
- 4 - 7 - black  - 6
- 6 - 6 - orange - 7
- 20 - 4 - grey   - 8
- NC     - 9
+ 1. make function to draw a log entry (location and text)
+ 2. make function to decode gridloc's
+ 3. accept location in gridloc, geolib notations, lighthouses and islands etc.
+ 4. make persistent list of all entries and mark if they are drawn
+ 5. make http server to add entries
+ 6. lookup entries from online spotter service?
  
  */
 
-
-
-//--------------------------------------------------------------
 void ofApp::setup(){
     
-    //setup gui
+    setupGui();
     
-    ImGui::GetIO().MouseDrawCursor = false;
+    loadLighthouses("wllw_lighthouses.xml");
     
-    ImGuiIO& io = ImGui::GetIO();
-    
-    io.Fonts->Clear();
-    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Light.ttf", true).c_str(), 16);
-    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Regular.ttf", true).c_str(), 16);
-    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Light.ttf", true).c_str(), 32);
-    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Regular.ttf", true).c_str(), 11);
-    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Bold.ttf", true).c_str(), 11);
-    io.Fonts->Build();
-    
-    gui.setup(new GuiTheme());
-    
-    ImGuiStyle & style = ImGui::GetStyle();
-    
-    style.WindowPadding            = ImVec2(15, 15);
-    style.WindowRounding           = .0f;
-    style.FramePadding             = ImVec2(8, 3);
-    style.FrameRounding            = 3.0f;
-    style.ItemSpacing              = ImVec2(12, 5);
-    style.ItemInnerSpacing         = ImVec2(8, 6);
-    style.IndentSpacing            = 25.0f;
-    style.ScrollbarSize            = 15.0f;
-    style.ScrollbarRounding        = 9.0f;
-    style.GrabMinSize              = 8.0f;
-    style.GrabRounding             = 2.0f;
-    
-    style.Colors[ImGuiCol_Text]                  = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
-    style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
-    style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.96f, 0.96f, 0.96f, 0.45f);
-    style.Colors[ImGuiCol_ChildWindowBg]         = ImVec4(1.00f, 1.00f, 1.00f, 0.35f);
-    style.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    style.Colors[ImGuiCol_Border]                = ImVec4(0.84f, 0.83f, 0.80f, 0.42f);
-    style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
-    style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.03f, 0.00f, 0.00f, 0.02f);
-    style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.84f, 0.83f, 0.80f, 0.42f);
-    style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.84f, 0.83f, 0.80f, 0.20f);
-    style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.84f, 0.83f, 0.80f, 1.00f);
-    style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(1.00f, 1.00f, 1.00f, 0.92f);
-    style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(1.00f, 1.00f, 1.00f, 0.76f);
-    style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.00f, 0.00f, 0.00f, 0.21f);
-    style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.00f, 0.00f, 0.00f, 0.32f);
-    style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-    style.Colors[ImGuiCol_ComboBg]               = ImVec4(1.00f, 0.98f, 1.00f, 1.00f);
-    style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.00f, 0.00f, 0.00f, 0.19f);
-    style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.00f, 0.00f, 0.00f, 0.14f);
-    style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-    style.Colors[ImGuiCol_Button]                = ImVec4(0.00f, 0.00f, 0.00f, 0.09f);
-    style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.00f, 0.00f, 0.00f, 0.01f);
-    style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.00f, 0.00f, 0.00f, 0.12f);
-    style.Colors[ImGuiCol_Header]                = ImVec4(0.02f, 0.05f, 0.00f, 0.05f);
-    style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.00f, 0.00f, 0.00f, 0.05f);
-    style.Colors[ImGuiCol_HeaderActive]          = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-    style.Colors[ImGuiCol_Column]                = ImVec4(0.00f, 0.00f, 0.00f, 0.32f);
-    style.Colors[ImGuiCol_ColumnHovered]         = ImVec4(0.00f, 0.00f, 0.00f, 0.40f);
-    style.Colors[ImGuiCol_ColumnActive]          = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-    style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.00f, 0.00f, 0.00f, 0.04f);
-    style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.25f, 1.00f, 0.00f, 0.78f);
-    style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-    style.Colors[ImGuiCol_CloseButton]           = ImVec4(0.40f, 0.39f, 0.38f, 0.16f);
-    style.Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(0.40f, 0.39f, 0.38f, 0.39f);
-    style.Colors[ImGuiCol_CloseButtonActive]     = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
-    style.Colors[ImGuiCol_PlotLines]             = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
-    style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-    style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
-    style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-    style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.25f, 1.00f, 0.00f, 0.57f);
-    style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(1.00f, 0.98f, 0.95f, 0.68f);
-    
-    
-    if(lighthouseXml.load("wllw_lighthouses.xml")){
-        ofLogNotice() << lighthouseXml.getNumChildren() << " lighthouses loaded";
-    };
-    
-    auto lhNodes = lighthouseXml.getPocoElement()->childNodes();
-    
-    ofLogNotice() << lhNodes->length() << " lighthouses parsed";
-    
-    ofxGeo::Coordinate hammerenFyr(55.286849, 14.759447);
-    
-    for(int i = 0; i < lhNodes->length() ; i++){
-        if(lhNodes->item(i)->hasChildNodes()){
-            
-            Lighthouse l;
-            l.country = lhNodes->item(i)->getNodeByPath("country")->innerText();
-            l.name = lhNodes->item(i)->getNodeByPath("name")->innerText();
-            l.dxcc = lhNodes->item(i)->getNodeByPath("dxcc")->innerText();
-            l.continent = lhNodes->item(i)->getNodeByPath("continent")->innerText();
-            l.illw = lhNodes->item(i)->getNodeByPath("illw")->innerText();
-
-            string coords = lhNodes->item(i)->getNodeByPath("geo")->innerText();
-            
-            if (!(ofIsStringInString(coords, "Museum")||ofIsStringInString(coords, "museum"))){
-                
-                if(coords[0] == '@'){
-                    coords = coords.substr(1, coords.find_last_of(','));
-                }
-                ofStringReplace(coords, "<br>", " ");
-                //ofLogNotice() << coords;
-                try
-                {
-                    // Miscellaneous conversions
-                    GeographicLib::GeoCoords c(coords);
-                    ofxGeo::Coordinate cOfx(c.Latitude(), c.Longitude());
-                    
-                    l.coordinate = cOfx;
-                    
-                    ofLogNotice() << ofxGeo::Utils::distanceHaversine(hammerenFyr, cOfx) << "km til " << lhNodes->item(i)->getNodeByPath("country")->innerText() << " " << lhNodes->item(i)->getNodeByPath("name")->innerText() << " retning " << ofxGeo::Utils::bearingHaversine(hammerenFyr, cOfx);
-                    
-                    
-                }
-                catch (const std::exception& e) {
-                    ofLogError() << "\t" << lhNodes->item(i)->getNodeByPath("country")->innerText() << " " << lhNodes->item(i)->getNodeByPath("name")->innerText() << endl << "\t\t\t" <<  lhNodes->item(i)->getNodeByPath("geo")->innerText() << endl << "\t\t\t" << "Caught exception: " << e.what() << endl;
-                }
-            }
-
-            lighthouses.push_back(l);
-            if(ofIsStringInString(l.country, "Denmark") && ofIsStringInString(l.name, "Hammer")){
-                location = l;
-            }
-        }
-    }
+    // Plotter
     
     plotFont.load("machtgth.ttf", 20, true, true, true);
-    
     plotter.setup( "/dev/tty.usbserial-FT5CHURVB" );
     
     // notice in the main.cpp file that the window dimensions are the same ratio as 11x17
@@ -198,13 +51,11 @@ void ofApp::setup(){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::update(){
     
     plotter.update();
 }
 
-//--------------------------------------------------------------
 void ofApp::draw(){
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     ofBackground(255, 255);
@@ -281,15 +132,15 @@ void ofApp::draw(){
         // If your items are of variable size you may want to implement code similar to what ImGuiListClipper does. Or split your data into fixed height items to allow random-seeking into your list.
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
         
-        for (int i = 0; i < lighthouses.size(); i++){
-            string searchStr = lighthouses[i].illw + " " + lighthouses[i].country + " " + " " + lighthouses[i].name;
+        for (int i = 0; i < locations.size(); i++){
+            string searchStr = locations[i].illw + " " + locations[i].country + " " + " " + locations[i].name;
             
             
             if (filter.PassFilter(searchStr.c_str())){
                 if(ImGui::Button(searchStr.c_str())){
                     LogEntry l;
-                    l.source = location;
-                    l.destination = lighthouses[i];
+                    l.source = lighthouse;
+                    l.destination = locations[i];
                     log.push_back(l);
                     ///   * %d - days
                     ///   * %H - hours	 (00 .. 23)
@@ -387,12 +238,10 @@ void ofApp::draw(){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::keyReleased(int key){
     if( key == 'c' ) {
         plotter.circle(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()), ofRandom(2,500));
@@ -533,47 +382,168 @@ void ofApp::plotText(string str, ofTrueTypeFont font, ofPoint pos, float size, f
     }
 }
 
-//--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::mouseExited(int x, int y){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::gotMessage(ofMessage msg){
     
 }
 
-//--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){
     
+}
+
+void ofApp::setupGui(){
+    
+    
+    ImGui::GetIO().MouseDrawCursor = false;
+    
+    ImGuiIO& io = ImGui::GetIO();
+    
+    io.Fonts->Clear();
+    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Light.ttf", true).c_str(), 16);
+    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Regular.ttf", true).c_str(), 16);
+    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Light.ttf", true).c_str(), 32);
+    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Regular.ttf", true).c_str(), 11);
+    io.Fonts->AddFontFromFileTTF(ofToDataPath("OpenSans-Bold.ttf", true).c_str(), 11);
+    io.Fonts->Build();
+    
+    gui.setup(new GuiTheme());
+    
+    ImGuiStyle & style = ImGui::GetStyle();
+    
+    style.WindowPadding            = ImVec2(15, 15);
+    style.WindowRounding           = .0f;
+    style.FramePadding             = ImVec2(8, 3);
+    style.FrameRounding            = 3.0f;
+    style.ItemSpacing              = ImVec2(12, 5);
+    style.ItemInnerSpacing         = ImVec2(8, 6);
+    style.IndentSpacing            = 25.0f;
+    style.ScrollbarSize            = 15.0f;
+    style.ScrollbarRounding        = 9.0f;
+    style.GrabMinSize              = 8.0f;
+    style.GrabRounding             = 2.0f;
+    
+    style.Colors[ImGuiCol_Text]                  = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
+    style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
+    style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.96f, 0.96f, 0.96f, 0.45f);
+    style.Colors[ImGuiCol_ChildWindowBg]         = ImVec4(1.00f, 1.00f, 1.00f, 0.35f);
+    style.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    style.Colors[ImGuiCol_Border]                = ImVec4(0.84f, 0.83f, 0.80f, 0.42f);
+    style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
+    style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.03f, 0.00f, 0.00f, 0.02f);
+    style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.84f, 0.83f, 0.80f, 0.42f);
+    style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(0.84f, 0.83f, 0.80f, 0.20f);
+    style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.84f, 0.83f, 0.80f, 1.00f);
+    style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(1.00f, 1.00f, 1.00f, 0.92f);
+    style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(1.00f, 1.00f, 1.00f, 0.76f);
+    style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.00f, 0.00f, 0.00f, 0.21f);
+    style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.00f, 0.00f, 0.00f, 0.32f);
+    style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+    style.Colors[ImGuiCol_ComboBg]               = ImVec4(1.00f, 0.98f, 1.00f, 1.00f);
+    style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.00f, 0.00f, 0.00f, 0.19f);
+    style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.00f, 0.00f, 0.00f, 0.14f);
+    style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+    style.Colors[ImGuiCol_Button]                = ImVec4(0.00f, 0.00f, 0.00f, 0.09f);
+    style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.00f, 0.00f, 0.00f, 0.01f);
+    style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.00f, 0.00f, 0.00f, 0.12f);
+    style.Colors[ImGuiCol_Header]                = ImVec4(0.02f, 0.05f, 0.00f, 0.05f);
+    style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.00f, 0.00f, 0.00f, 0.05f);
+    style.Colors[ImGuiCol_HeaderActive]          = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    style.Colors[ImGuiCol_Column]                = ImVec4(0.00f, 0.00f, 0.00f, 0.32f);
+    style.Colors[ImGuiCol_ColumnHovered]         = ImVec4(0.00f, 0.00f, 0.00f, 0.40f);
+    style.Colors[ImGuiCol_ColumnActive]          = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(0.00f, 0.00f, 0.00f, 0.04f);
+    style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.25f, 1.00f, 0.00f, 0.78f);
+    style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_CloseButton]           = ImVec4(0.40f, 0.39f, 0.38f, 0.16f);
+    style.Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(0.40f, 0.39f, 0.38f, 0.39f);
+    style.Colors[ImGuiCol_CloseButtonActive]     = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
+    style.Colors[ImGuiCol_PlotLines]             = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+    style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
+    style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.25f, 1.00f, 0.00f, 0.57f);
+    style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(1.00f, 0.98f, 0.95f, 0.68f);
+}
+
+bool ofApp::loadLighthouses(string xmlFilePath){
+    if(lighthouseXml.load(xmlFilePath)){
+        ofLogNotice() << " lighthouses loaded";
+    } else {
+        return false;
+    }
+    
+    auto lhNodes = lighthouseXml.getChild("lights").getChildren();
+    
+    ofxGeo::Coordinate hammerenFyr(55.286849, 14.759447);
+    
+    for(auto node : lhNodes){
+        Location l;
+        l.country = node.getChild("country").getValue();
+        l.name = node.getChild("name").getValue();
+        l.dxcc = node.getChild("dxcc").getValue();
+        l.continent = node.getChild("continent").getValue();
+        l.illw = node.getChild("illw").getValue();
+        
+        string coords = node.getChild("geo").getValue();
+        
+        if (!(ofIsStringInString(coords, "Museum")||ofIsStringInString(coords, "museum"))){
+            
+            if(coords[0] == '@'){
+                coords = coords.substr(1, coords.find_last_of(','));
+            }
+            ofStringReplace(coords, "<br>", " ");
+            
+            try
+            {
+                // Miscellaneous conversions
+                GeographicLib::GeoCoords c(coords);
+                ofxGeo::Coordinate cOfx(c.Latitude(), c.Longitude());
+                
+                l.coordinate = cOfx;
+                
+                ofLogNotice() << ofxGeo::GeoUtils::distanceHaversine(hammerenFyr, cOfx) << "km til " << l.country << " " << l.name << " retning " << ofxGeo::GeoUtils::bearingHaversine(hammerenFyr, cOfx);
+                
+                
+            }
+            catch (const std::exception& e) {
+                ofLogError() << "\t" << l.country << " " << l.name << endl << "\t\t\t" <<  coords << endl << "\t\t\t" << "Caught exception: " << e.what() << endl;
+            }
+        }
+        
+        locations.push_back(l);
+        if(ofIsStringInString(l.country, "Denmark") && ofIsStringInString(l.name, "Hammer")){
+            lighthouse = l;
+        }
+    }
+    return true;
+
 }

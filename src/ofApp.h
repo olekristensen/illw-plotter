@@ -7,6 +7,7 @@
 #include "ofxGeographicLib.h"
 #include "ofxImGui.h"
 #include "ofxJSONRPC.h"
+#include "ofxHersheyFont.h"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
@@ -76,10 +77,10 @@ public:
     // PLOTTER
     
     ofxHPGL plotter;
+    ofPath path;
+    ofxHersheyFont hersheyFont;
     
-    ofTrueTypeFont plotFont;
-    
-    void plotText(string str, ofTrueTypeFont font, ofPoint pos=ofPoint(0,0), float size=20, float rotation=0, TextAlignment alignment = LEFT, TextVerticalAlignment valign = BASELINE);
+    void plotText(string str, ofPoint pos=ofPoint(0,0), float size=20, float rotation=0, TextAlignment alignment = LEFT, TextVerticalAlignment valign = BASELINE);
 
     ofPoint startPoint;
     ofPoint endPoint;
@@ -93,6 +94,33 @@ public:
     int guiColumnWidth = 250;
     
     // SERVER
+    
+    // Registered methods.
+    void getText(ofx::JSONRPC::MethodArgs& args);
+    void setText(ofx::JSONRPC::MethodArgs& args);
+    
+    // Register a no-argument notification method.
+    void ping();
+    
+    // Register a no-argument notification method.
+    void pong();
+    
+    
+    /// \brief The server that handles the JSONRPC requests.
+    ofx::HTTP::JSONRPCServer server;
+    
+    /// \brief Get a snippet of random text in a thread-safe way.
+    /// \returns The snippet of random text.
+    std::string getRandomText() const;
+    
+    /// \brief Get the user text in a thread-safe way.
+    /// \returns The user text.
+    std::string getUserText() const;
+    
+    /// \brief Set the user text in a thread-safe way.
+    /// \param text the user text to set.
+    void setUserText(const std::string& text);
+    
     
     // We use a mutex to protect any variables that can be
     // modified by multiple clients.  In our case, userText must be protected.

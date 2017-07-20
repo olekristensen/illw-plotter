@@ -3,6 +3,7 @@
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807,
     "CA29DB320F881B85D76220FC5498A4D1FA4F037C" : 9223372036854775807,
     "6DFDEEAED5C97364A7A859C0B354E13F95C94005" : 9223372036854775807,
     "CC64F4963C935629E4EEDB8221C0DA9B68D2313F" : 9223372036854775807,
@@ -14,10 +15,11 @@
     "A4B2B4422B32074CDD7FABA8BC493A66417E3647" : 9223372036854775807,
     "6D6FDB373C9A9EB614FB047E30EC71CD5377F13C" : 9223372036854775807,
     "7ED0D15754D9EE08B829B967643A20055B98F6F4" : 9223372036854775807,
-    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807
+    "C08088D16AA20160C2DFA22579B7DD5F3C53F528" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "A24BC017-FA7D-4867-AC3B-A8DE662C132B",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "F70F0CF7-8C74-4D36-861B-C66C46E8A638",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
     "CA29DB320F881B85D76220FC5498A4D1FA4F037C" : "..\/..\/addons\/ofxIO",
     "6DFDEEAED5C97364A7A859C0B354E13F95C94005" : "..\/..\/addons\/ofxTime",
     "CC64F4963C935629E4EEDB8221C0DA9B68D2313F" : "..\/..\/addons\/ofxMediaType",
@@ -29,7 +31,7 @@
     "A4B2B4422B32074CDD7FABA8BC493A66417E3647" : "..\/..\/addons\/ofxGeographicLib",
     "6D6FDB373C9A9EB614FB047E30EC71CD5377F13C" : "..\/..\/addons\/ofxSSLManager",
     "7ED0D15754D9EE08B829B967643A20055B98F6F4" : "..\/..\/addons\/ofxGeo",
-    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui"
+    "C08088D16AA20160C2DFA22579B7DD5F3C53F528" : "..\/..\/addons\/ofxHersheyFont"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "hamPlotter",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -79,6 +81,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxGeographicLib",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A4B2B4422B32074CDD7FABA8BC493A66417E3647"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/olekristensen\/ofxHersheyFont.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "C08088D16AA20160C2DFA22579B7DD5F3C53F528"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxIO",

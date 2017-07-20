@@ -11,3 +11,4 @@ ofxHTTP
 ofxSSLManager
 ofxMediaType
 ofxNetworkUtils
+ofxHersheyFont

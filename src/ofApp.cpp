@@ -3,7 +3,7 @@
 
 //TODO:
 /*
- 
+ 0. make resolution independent
  1. make function to draw a log entry (location and text)
  2. make function to decode gridloc's
  3. accept location in gridloc, geolib notations, lighthouses and islands etc.
@@ -15,25 +15,22 @@
 
 void ofApp::setup(){
     
+    path.setMode(ofPath::POLYLINES);
+    path.setFilled(false);
+    
     setupGui();
     
     loadLighthouses("wllw_lighthouses.xml");
     
     // Plotter
     
-    plotFont.load("machtgth.ttf", 20, true, true, true);
     plotter.setup( "/dev/tty.usbserial-FT5CHURVB" );
-    
-    // notice in the main.cpp file that the window dimensions are the same ratio as 11x17
-    // if you want to change the input width or height ( defaults to window dimensions) //
-    // be sure to call setInputWidth and setInputHeight to the width and height
-    // of the input area that you will be using. The defaults are ofGetWidth() and ofGetHeight()
-    // see the example below //
-    int windowW = 1200;
-    int windowH = (float)windowW * (float)(sqrt(2.0));
-    ofSetWindowShape( windowH, windowW );
-    plotter.setInputWidth( windowH );
-    plotter.setInputHeight( windowW );
+
+    int pageW = ofGetScreenHeight()-600;
+    int pageH = (float)pageW * (float)(sqrt(2.0));
+    ofSetWindowShape( pageH, pageW );
+    plotter.setInputWidth( pageH );
+    plotter.setInputHeight( pageW );
     plotter.setPenColor(1, ofColor::darkBlue);
     plotter.setPenColor(2, ofColor::black);
     plotter.enableCapture();
@@ -48,6 +45,38 @@ void ofApp::setup(){
     startPoint.set(width-(margin+radius), halfHeight);
     endPoint.set(margin+radius, halfHeight);
     
+    ofx::HTTP::JSONRPCServerSettings settings;
+    settings.setPort(8197);
+    
+    // Initialize the server.
+    server.setup(settings);
+    
+    // Register RPC methods.
+    server.registerMethod("get-text",
+                          "Returns a random chunk of text to the client.",
+                          this,
+                          &ofApp::getText);
+    
+    server.registerMethod("set-text",
+                          "Sets text from the user.",
+                          this,
+                          &ofApp::setText);
+    
+    server.registerMethod("ping",
+                          "Send a JSONRPC Ping Notification",
+                          this,
+                          &ofApp::ping);
+    
+    server.registerMethod("pong",
+                          "Send a JSONRPC Pong Notification",
+                          this,
+                          &ofApp::pong);
+    
+    // Start the server.
+    server.start();
+    
+    // Launch a browser with the address of the server.
+    ofLaunchBrowser(server.url());
     
 }
 
@@ -65,12 +94,13 @@ void ofApp::draw(){
     ofSetColor(0, 255);
     ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
     plotter.draw();
+    path.draw();
     /*
-    ofSetColor(255,0,255,200);
-    plotter.pushMatrix();
-    ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
-    plotter.popMatrix();
-    */
+     ofSetColor(255,0,255,200);
+     plotter.pushMatrix();
+     ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
+     plotter.popMatrix();
+     */
     
     // GUI
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
@@ -107,15 +137,15 @@ void ofApp::draw(){
         ImGui::Separator();
         
         static ImGuiTextFilter filter;
-       /* ImGui::Text("Filter usage:\n"
-                    "  \"\"         display all lines\n"
-                    "  \"xxx\"      display lines containing \"xxx\"\n"
-                    "  \"xxx,yyy\"  display lines containing \"xxx\" or \"yyy\"\n"
-                    "  \"-xxx\"     hide lines containing \"xxx\"");*/
+        /* ImGui::Text("Filter usage:\n"
+         "  \"\"         display all lines\n"
+         "  \"xxx\"      display lines containing \"xxx\"\n"
+         "  \"xxx,yyy\"  display lines containing \"xxx\" or \"yyy\"\n"
+         "  \"-xxx\"     hide lines containing \"xxx\"");*/
         filter.Draw("Search");
         
         Poco::DateTimeFormatter fmt;
-
+        
         int countMatches = 0;
         ImGui::BeginChild("LighthouseList", ImVec2(0,100), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
         
@@ -157,13 +187,13 @@ void ofApp::draw(){
                 };
                 countMatches++;
             }
-//            if(countMatches>15) break;
+            //            if(countMatches>15) break;
         }
         
         ImGui::PopStyleVar();
         ImGui::EndChild();
-
-
+        
+        
         ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(1.0,1.0,1.0,1.0));
         ImGui::BeginChild("Log", ImVec2(0,100), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
@@ -176,8 +206,8 @@ void ofApp::draw(){
         ImGui::PopStyleVar();
         ImGui::EndChild();
         ImGui::PopStyleColor();
-
-
+        
+        
         ImGui::Separator();
         
         ImGui::PushFont(ImGuiIO().Fonts->Fonts[1]);
@@ -206,7 +236,7 @@ void ofApp::draw(){
             {
                 plotter.clear();
             }
-
+            
         }else{
             if (ImGui::Button("Clear"))
             {
@@ -268,7 +298,7 @@ void ofApp::keyReleased(int key){
             plotter.line(x, halfHeight-10, x, halfHeight+10);
             
             plotter.setPen(2);
-            plotText(ofToString(i), plotFont, ofPoint(x ,halfHeight-13), 7, -90, LEFT, MIDDLE);
+            plotText(ofToString(i), ofPoint(x ,halfHeight-13), 7, -90, LEFT, MIDDLE);
             
         }
     }
@@ -282,50 +312,50 @@ void ofApp::keyReleased(int key){
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
         plotter.circle(x, y, 5);
-        plotText("this text is left baseline", plotFont, ofPoint(x,y), 20, 180);
+        plotText("this text is left baseline", ofPoint(x,y), 20, 180);
         plotter.setPen(1);
-        plotText("this text is left baseline", plotFont, ofPoint(x,y), 20);
+        plotText("this text is left baseline", ofPoint(x,y), 20);
         y+=300;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
         plotter.circle(x, y, 5);
-        plotText("this text is center baseline", plotFont, ofPoint(x,y), 40, 180,CENTER);
+        plotText("this text is center baseline", ofPoint(x,y), 40, 180,CENTER);
         plotter.setPen(1);
-        plotText("this text is center baseline", plotFont, ofPoint(x,y), 40, 0,CENTER);
+        plotText("this text is center baseline", ofPoint(x,y), 40, 0,CENTER);
         y+=300;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
         plotter.circle(x, y, 5);
-        plotText("this text is right baseline", plotFont, ofPoint(x,y), 10, 180,RIGHT);
+        plotText("this text is right baseline", ofPoint(x,y), 10, 180,RIGHT);
         plotter.setPen(1);
-        plotText("this text is right baseline", plotFont, ofPoint(x,y), 10, 0,RIGHT);
+        plotText("this text is right baseline", ofPoint(x,y), 10, 0,RIGHT);
         x*=3;
         y=200;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
         plotter.circle(x, y, 5);
-        plotText("This text is left top", plotFont, ofPoint(x,y), 10, 180,LEFT, TOP);
+        plotText("This text is left top", ofPoint(x,y), 10, 180,LEFT, TOP);
         plotter.setPen(1);
-        plotText("This text is left top", plotFont, ofPoint(x,y), 10, 0,LEFT, TOP);
+        plotText("This text is left top", ofPoint(x,y), 10, 0,LEFT, TOP);
         y+=300;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
         plotter.circle(x, y, 5);
-        plotText("This text is center middle", plotFont, ofPoint(x,y), 20, 180,CENTER, MIDDLE);
+        plotText("This text is center middle", ofPoint(x,y), 20, 180,CENTER, MIDDLE);
         plotter.setPen(1);
-        plotText("This text is center middle", plotFont, ofPoint(x,y), 20, 0,CENTER, MIDDLE);
+        plotText("This text is center middle", ofPoint(x,y), 20, 0,CENTER, MIDDLE);
         y+=300;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
         plotter.circle(x, y, 5);
-        plotText("this text is right bottom", plotFont, ofPoint(x,y), 40, 180,RIGHT, BOTTOM);
+        plotText("this text is right bottom", ofPoint(x,y), 40, 180,RIGHT, BOTTOM);
         plotter.setPen(1);
-        plotText("this text is right bottom", plotFont, ofPoint(x,y), 40, 0,RIGHT, BOTTOM);
+        plotText("this text is right bottom", ofPoint(x,y), 40, 0,RIGHT, BOTTOM);
         
     }
     if ( key == 'n') {
@@ -340,45 +370,42 @@ void ofApp::keyReleased(int key){
         plotter.line(x, y+c, x+r, y);
         plotter.line(x, y-c, x-r, y);
         plotter.line(x, y+c, x-r, y);
-        plotText("N", plotFont, ofPoint(x-r*1.2,y), 15, -90, CENTER);
+        plotText("N", ofPoint(x-r*1.2,y), 15, -90, CENTER);
     }
 }
 
-void ofApp::plotText(string str, ofTrueTypeFont font, ofPoint pos, float size, float rotation, TextAlignment alignment, TextVerticalAlignment valign){
+void ofApp::plotText(string str, ofPoint pos, float size, float rotation, TextAlignment alignment, TextVerticalAlignment valign){
     
-    float sizeFactor = size/font.getSize();
+    float sizeFactor = (size/21.0)*(plotter.getInputWidth()/1200.0);
     
-    float mHeight = font.getStringBoundingBox("m", 0, 0).height;
-    auto chars = font.getStringAsPoints(str);
-    auto bb = font.getStringBoundingBox(str, 0, 0);
-    for (auto c : chars){
-        if(alignment == LEFT){
-            // noting to be done
-        } else if(alignment == CENTER) {
-            c.translate(ofPoint(-bb.width/2.0, 0));
-        } else if(alignment == RIGHT){
-            c.translate(ofPoint(-bb.width, 0));
-        }
-        if(valign == TOP){
-            c.translate(ofPoint(0, font.getSize()));
-        } else if (valign == MIDDLE){
-            c.translate(ofPoint(0, mHeight/2.0));
-        } else if (valign == BOTTOM){
-            c.translate(ofPoint(0, font.getDescenderHeight()));
-        } else if (valign == BASELINE){
-            // nothing to be done
-        }
-        
-        c.rotate(rotation, ofVec3f(0,0,1));
-        c.scale(sizeFactor, sizeFactor);
-        
-        c.translate(pos);
-        
-        auto o = c.getOutline();
-        for (auto p : o){
-            p.simplify(0.05);
-            plotter.polyline(p);
-        }
+    auto c = hersheyFont.getPath(str, sizeFactor);
+
+    float width = hersheyFont.getWidth(str, sizeFactor);
+    float mHeight = 14.0*sizeFactor;
+    
+    if(alignment == LEFT){
+        // noting to be done
+    } else if(alignment == CENTER) {
+        c.translate(ofPoint(-width/2.0, 0));
+    } else if(alignment == RIGHT){
+        c.translate(ofPoint(-width, 0));
+    }
+    if(valign == TOP){
+        c.translate(ofPoint(0, size));
+    } else if (valign == MIDDLE){
+        c.translate(ofPoint(0, mHeight/2.0));
+    } else if (valign == BOTTOM){
+        c.translate(ofPoint(0, -7.0*sizeFactor));
+    } else if (valign == BASELINE){
+        // nothing to be done
+    }
+    
+    c.rotate(rotation, ofVec3f(0,0,1));
+    c.translate(pos);
+    
+    auto o = c.getOutline();
+    for (auto p : o){
+        plotter.polyline(p);
     }
 }
 
@@ -545,5 +572,49 @@ bool ofApp::loadLighthouses(string xmlFilePath){
         }
     }
     return true;
+    
+}
 
+
+void ofApp::ping()
+{
+    ofLogVerbose("ofApp::ping") << "Ping'd";
+}
+
+
+void ofApp::pong()
+{
+    ofLogVerbose("ofApp::pong") << "Pong'd";
+}
+
+
+void ofApp::getText(ofx::JSONRPC::MethodArgs& args)
+{
+    // Set the result equal to the substring.
+    std::unique_lock<std::mutex> lock(mutex);
+
+    
+    if(log.size()>0){
+    auto lastLog = log.back();
+    Poco::DateTimeFormatter fmt;
+    args.result = fmt.format(Poco::LocalDateTime(lastLog.timestamp), "%H:%M:%S") + " " + lastLog.source.name + " >> " + lastLog.destination.name;
+    } else {
+        args.result = "no log entries";
+    }
+    ofLogVerbose("ofApp::getText") << args.result.dump(4);
+}
+
+
+void ofApp::setText(ofx::JSONRPC::MethodArgs& args)
+{
+    // Set the user text.
+    setUserText(args.params);
+    ofLogVerbose("ofApp::setText") << args.params.dump(4);
+}
+
+
+void ofApp::setUserText(const std::string& text)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    cout << text;
 }

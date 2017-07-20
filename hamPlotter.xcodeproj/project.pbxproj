@@ -9,6 +9,86 @@
 		<string>46</string>
 		<key>objects</key>
 		<dict>
+			<key>EF98D06DFEDD141888C77717</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>simplexCharacterSet.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHersheyFont/src/simplexCharacterSet.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>0B19E78EDD887567CD5751A5</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.c.h</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>ofxHersheyFont.h</string>
+				<key>path</key>
+				<string>../../../addons/ofxHersheyFont/src/ofxHersheyFont.h</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
+			<key>EE84F7BCB1463CD405DCA7D5</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>093AA3624B220297E62C16F4</string>
+					<string>0B19E78EDD887567CD5751A5</string>
+					<string>EF98D06DFEDD141888C77717</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>src</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>8DA50CB0FAE1F7649DB99CF0</key>
+			<dict>
+				<key>children</key>
+				<array>
+					<string>EE84F7BCB1463CD405DCA7D5</string>
+				</array>
+				<key>isa</key>
+				<string>PBXGroup</string>
+				<key>name</key>
+				<string>ofxHersheyFont</string>
+				<key>sourceTree</key>
+				<string>&lt;group&gt;</string>
+			</dict>
+			<key>513340A5EDC1BEBD78BF7571</key>
+			<dict>
+				<key>fileRef</key>
+				<string>093AA3624B220297E62C16F4</string>
+				<key>isa</key>
+				<string>PBXBuildFile</string>
+			</dict>
+			<key>093AA3624B220297E62C16F4</key>
+			<dict>
+				<key>explicitFileType</key>
+				<string>sourcecode.cpp.cpp</string>
+				<key>fileEncoding</key>
+				<string>30</string>
+				<key>isa</key>
+				<string>PBXFileReference</string>
+				<key>name</key>
+				<string>ofxHersheyFont.cpp</string>
+				<key>path</key>
+				<string>../../../addons/ofxHersheyFont/src/ofxHersheyFont.cpp</string>
+				<key>sourceTree</key>
+				<string>SOURCE_ROOT</string>
+			</dict>
 			<key>69AF35586CA18EA57C5CFCD3</key>
 			<dict>
 				<key>fileRef</key>
@@ -12610,6 +12690,7 @@ fi
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/include/ofx/Net</string>
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/src</string>
 						<string>../../../addons/ofxNetworkUtils/src</string>
+						<string>../../../addons/ofxHersheyFont/src</string>
 					</array>
 					<key>CONFIGURATION_BUILD_DIR</key>
 					<string>$(SRCROOT)/bin/</string>
@@ -12781,6 +12862,7 @@ fi
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/include/ofx/Net</string>
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/src</string>
 						<string>../../../addons/ofxNetworkUtils/src</string>
+						<string>../../../addons/ofxHersheyFont/src</string>
 					</array>
 					<key>COMBINE_HIDPI_IMAGES</key>
 					<string>YES</string>
@@ -12833,6 +12915,7 @@ fi
 					<string>4BF286C389657955BDA84AA6</string>
 					<string>6827DB82AAD37B20D509DEA8</string>
 					<string>406D7399CEFC4C539B676AFF</string>
+					<string>8DA50CB0FAE1F7649DB99CF0</string>
 				</array>
 				<key>isa</key>
 				<string>PBXGroup</string>
@@ -13099,6 +13182,7 @@ fi
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/include/ofx/Net</string>
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/src</string>
 						<string>../../../addons/ofxNetworkUtils/src</string>
+						<string>../../../addons/ofxHersheyFont/src</string>
 					</array>
 					<key>CONFIGURATION_BUILD_DIR</key>
 					<string>$(SRCROOT)/bin/</string>
@@ -13268,6 +13352,7 @@ fi
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/include/ofx/Net</string>
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/src</string>
 						<string>../../../addons/ofxNetworkUtils/src</string>
+						<string>../../../addons/ofxHersheyFont/src</string>
 					</array>
 					<key>CONFIGURATION_BUILD_DIR</key>
 					<string>$(SRCROOT)/bin/</string>
@@ -13525,6 +13610,7 @@ fi
 					<string>633AFFDB4EC6674D34F0EF7D</string>
 					<string>B65D7C8C591DF95D595E2053</string>
 					<string>69AF35586CA18EA57C5CFCD3</string>
+					<string>513340A5EDC1BEBD78BF7571</string>
 				</array>
 				<key>isa</key>
 				<string>PBXSourcesBuildPhase</string>
@@ -13722,6 +13808,7 @@ fi
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/include/ofx/Net</string>
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/src</string>
 						<string>../../../addons/ofxNetworkUtils/src</string>
+						<string>../../../addons/ofxHersheyFont/src</string>
 					</array>
 					<key>COMBINE_HIDPI_IMAGES</key>
 					<string>YES</string>
@@ -13876,6 +13963,7 @@ fi
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/include/ofx/Net</string>
 						<string>../../../addons/ofxNetworkUtils/libs/ofxNetworkUtils/src</string>
 						<string>../../../addons/ofxNetworkUtils/src</string>
+						<string>../../../addons/ofxHersheyFont/src</string>
 					</array>
 					<key>COMBINE_HIDPI_IMAGES</key>
 					<string>YES</string>

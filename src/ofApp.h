@@ -11,8 +11,7 @@
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
-class Location{
-public:
+struct Location{
     string name;
     string country;
     string dxcc;
@@ -20,6 +19,11 @@ public:
     string illw;
     ofxGeo::Coordinate coordinate;
 };
+
+void to_json(ofJson& j, const Location& l);
+
+void from_json(const ofJson& j, Location& l);
+    
 
 class LogEntry{
 public:
@@ -96,31 +100,14 @@ public:
     // SERVER
     
     // Registered methods.
-    void getText(ofx::JSONRPC::MethodArgs& args);
-    void setText(ofx::JSONRPC::MethodArgs& args);
-    
-    // Register a no-argument notification method.
-    void ping();
-    
-    // Register a no-argument notification method.
-    void pong();
-    
+    void search(ofx::JSONRPC::MethodArgs& args);
     
     /// \brief The server that handles the JSONRPC requests.
     ofx::HTTP::JSONRPCServer server;
     
-    /// \brief Get a snippet of random text in a thread-safe way.
-    /// \returns The snippet of random text.
-    std::string getRandomText() const;
-    
-    /// \brief Get the user text in a thread-safe way.
-    /// \returns The user text.
-    std::string getUserText() const;
-    
-    /// \brief Set the user text in a thread-safe way.
-    /// \param text the user text to set.
-    void setUserText(const std::string& text);
-    
+    /// \brief Performs a search across locations.
+    /// \param term the user term to search for.
+    vector<Location> doSearch(const std::string& term);
     
     // We use a mutex to protect any variables that can be
     // modified by multiple clients.  In our case, userText must be protected.

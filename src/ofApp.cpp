@@ -14,6 +14,8 @@
  */
 
 void ofApp::setup(){
+
+    ofSetLogLevel(OF_LOG_VERBOSE);
     
     path.setMode(ofPath::POLYLINES);
     path.setFilled(false);
@@ -52,25 +54,10 @@ void ofApp::setup(){
     server.setup(settings);
     
     // Register RPC methods.
-    server.registerMethod("get-text",
-                          "Returns a random chunk of text to the client.",
+    server.registerMethod("search",
+                          "Performs a search across locations.",
                           this,
-                          &ofApp::getText);
-    
-    server.registerMethod("set-text",
-                          "Sets text from the user.",
-                          this,
-                          &ofApp::setText);
-    
-    server.registerMethod("ping",
-                          "Send a JSONRPC Ping Notification",
-                          this,
-                          &ofApp::ping);
-    
-    server.registerMethod("pong",
-                          "Send a JSONRPC Pong Notification",
-                          this,
-                          &ofApp::pong);
+                          &ofApp::search);
     
     // Start the server.
     server.start();
@@ -575,46 +562,48 @@ bool ofApp::loadLighthouses(string xmlFilePath){
     
 }
 
-
-void ofApp::ping()
-{
-    ofLogVerbose("ofApp::ping") << "Ping'd";
-}
-
-
-void ofApp::pong()
-{
-    ofLogVerbose("ofApp::pong") << "Pong'd";
-}
-
-
-void ofApp::getText(ofx::JSONRPC::MethodArgs& args)
+void ofApp::search(ofx::JSONRPC::MethodArgs& args)
 {
     // Set the result equal to the substring.
     std::unique_lock<std::mutex> lock(mutex);
 
+    ofLogVerbose("ofApp::search") << args.params.dump(4);
     
-    if(log.size()>0){
-    auto lastLog = log.back();
-    Poco::DateTimeFormatter fmt;
-    args.result = fmt.format(Poco::LocalDateTime(lastLog.timestamp), "%H:%M:%S") + " " + lastLog.source.name + " >> " + lastLog.destination.name;
-    } else {
-        args.result = "no log entries";
+    vector<Location> result = doSearch(args.params);
+    
+    args.result = result;
+
+    ofLogVerbose("ofApp::search") << args.result.dump(4);
+}
+
+vector<Location> ofApp::doSearch(const std::string& term)
+{
+    ofLogVerbose("ofApp::doSearch") << term;
+
+    vector<Location> results;
+    for(auto l : locations){
+        if(ofIsStringInString(ofToLower(l.name), ofToLower(term))){
+            results.push_back(l);
+        }
     }
-    ofLogVerbose("ofApp::getText") << args.result.dump(4);
+    ofLogVerbose("ofApp::doSearch") << results.size();
+
+    return results;
 }
 
 
-void ofApp::setText(ofx::JSONRPC::MethodArgs& args)
-{
-    // Set the user text.
-    setUserText(args.params);
-    ofLogVerbose("ofApp::setText") << args.params.dump(4);
-}
+void to_json(ofJson& j, const Location& l) {
+    j = ofJson{{"name", l.name}, {"country", l.country}, {"dxcc", l.dxcc}, {"continent", l.continent}, {"illw", l.illw}, {"coordinate", { {"lat", l.coordinate.getLatitude()}, {"lon", l.coordinate.getLongitude() } } } };
+};
+
+void from_json(const ofJson& j, Location& l) {
+    
+    l.name = j.at("name").get<std::string>();
+    l.country = j.at("country").get<std::string>();
+    l.dxcc = j.at("dxcc").get<std::string>();
+    l.continent = j.at("continent").get<std::string>();
+    l.illw = j.at("illw").get<std::string>();
+    l.coordinate = ofxGeo::Coordinate(j.at("coordinate").at("lat").get<double>(),  j.at("coordinate").at("lon").get<double>() );
+};
 
 
-void ofApp::setUserText(const std::string& text)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    cout << text;
-}

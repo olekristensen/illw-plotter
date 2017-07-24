@@ -15,16 +15,17 @@
 
 void ofApp::setup(){
 
-    ofSetLogLevel(OF_LOG_VERBOSE);
+    ofSetLogLevel(OF_LOG_NOTICE);
     
-    path.setMode(ofPath::POLYLINES);
-    path.setFilled(false);
+    // GUI
     
     setupGui();
     
+    // LIGHTHOUSE DATA
+    
     loadLighthouses("wllw_lighthouses.xml");
     
-    // Plotter
+    // PLOTTER
     
     plotter.setup( "/dev/tty.usbserial-FT5CHURVB" );
 
@@ -37,7 +38,6 @@ void ofApp::setup(){
     plotter.setPenColor(2, ofColor::black);
     plotter.enableCapture();
     plotter.setPen(1);
-    //plotter.setPenVelocity(1.0);
     
     float height = plotter.getInputHeight();
     float width = plotter.getInputWidth();
@@ -46,6 +46,11 @@ void ofApp::setup(){
     margin = height / 10.;
     startPoint.set(width-(margin+radius), halfHeight);
     endPoint.set(margin+radius, halfHeight);
+    
+    path.setMode(ofPath::POLYLINES);
+    path.setFilled(false);
+    
+    // SERVER
     
     ofx::HTTP::JSONRPCServerSettings settings;
     settings.setPort(8197);

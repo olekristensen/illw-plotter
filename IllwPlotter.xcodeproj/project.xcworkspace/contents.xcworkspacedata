@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:">
+      location = "self:/Users/olek/Development/of_git/apps/myApps/hamPlotter/IllwPlotter.xcodeproj">
    </FileRef>
 </Workspace>

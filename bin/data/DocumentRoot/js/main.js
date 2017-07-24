@@ -24,6 +24,8 @@
 
 var JSONRPCClient; ///< The core JSONRPC WebSocket client.
 
+var selectedLocation;
+
 function addError(error) {
   console.log(error);
 }
@@ -46,30 +48,98 @@ function onWebSocketError() {
   console.log("on error");
 }
 
-function initializeButtons() {
-
+function addLogEntry(location) {
+  var $this = $(this);
+  JSONRPCClient.call('addLogEntry',
+      selectedLocation,
+      function(result) {
+        if(result != null){
+          refreshLog();
+          $("#success-alert").html("<strong>" + result.destination.illw + "</strong> " + result.destination.name + " has been logged.");
+          $("#success-alert").fadeTo(2000, 500, function(){
+            $("#success-alert").fadeTo(2000,0);
+          });
+          $("#location-selection-container").slideUp(500);
+          $(".location-search").val("").trigger("change");
+          $(".location-search").select2("open");
+        }
+      },
+      function(error) {
+          addError(error);
+      });
 }
 
-function updatePage(location){
-  $('#location-selection').html("<div class='clearfix'><p><br/>" +
-  "<img class='img-rounded pull-left' style='margin-right:10px;' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center=" + location.coordinate.lat + "," + location.coordinate.lon + "&markers=color:black%7Csize:small%7C" + location.coordinate.lat + "," + location.coordinate.lon +
-  "&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&zoom=13&size=400x300&key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8'/>" +
-  " <small>" + location.continent + "</small> <br/>" +
-  " <small>" + location.country + "</small> <br/>" +
-  " <small>" + location.dxcc + "</small> <br/>" +
-  " <small>" + location.coordinate.lat + "</small> <br/>" +
-  " <small>" + location.coordinate.lon + "</small> <br/>" +
-  "</p></div>");
+function refreshLog(){
+  var $this = $(this);
+  var text = $("#log").val();
+  var lines = text.split(/\r|\r\n|\n/);
+  var count = lines.length;
+  console.log(count);
+  JSONRPCClient.call('getLog',
+      count-1,
+      function(result) {
+        console.log(result);
+        if(result.length > 0){
+          var logStr = [];
+          $.each(result, function(idx, obj) {
+            var str = obj.timestamp + " : " + obj.source.name + " >> " + obj.destination.name;
+            logStr.push(str);
+          });
+          console.log(logStr.join("\n"));
+          $('#log').val($('#log').val()+"\n"+logStr.join("\n"));
+          $('#log').scrollTop($('#log')[0].scrollHeight);
+        }
+      },
+      function(error) {
+          addError(error);
+      });
+}
+
+function initializeButtons() {
+
+  $('#add-log-entry').on('click', function() {
+    addLogEntry(selectedLocation);
+  });
+
+  $('#refresh-log').on('click', function() {
+    refreshLog();
+  });
+}
+
+function selectLocation(location){
+
+  var markup = "<div class='media'>" +
+  "<div class='pull-right'>" +
+  "<img class='media-object img-rounded' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center=" + location.coordinate.lat + "," + location.coordinate.lon + "&markers=color:black%7Csize:small%7C" + location.coordinate.lat + "," + location.coordinate.lon + "&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&zoom=13&size=400x120&key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8'/>" +
+  "</div>" +
+  "<div class='media-body'><b>" + location.illw + "</b> " + location.name +
+  "<br><small>" + location.country + "</small> " +
+  "<br><small>" + location.continent + "</small> " +
+  "<br><small>" + location.dxcc + "</small> " +
+  "<br><small>" + location.coordinate.lat + "</small> " +
+  "<br><small>" + location.coordinate.lon + "</small> " +
+  "</div>" +
+  "</div>";
+
+  $('#location-selection').html(markup);
+  $("#location-selection-container").slideDown(500);
+  selectedLocation = location;
+  $('#add-log-entry').focus();
 }
 
 function formatLocation (location) {
   if (location.loading) return "Fetching results from server...";
 
-  var markup = "<div class='clearfix'>" +
-  "<img class='img-rounded pull-right' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center=" + location.coordinate.lat + "," + location.coordinate.lon + "&markers=color:black%7Csize:small%7C" + location.coordinate.lat + "," + location.coordinate.lon + "&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&zoom=11&size=200x100&key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8'/>" +
-  "<div><b>" + location.illw + "</b> " + location.name +  "<br><small>" + location.country + "</small> " +
+  var markup = "<div class='media'>" +
+  "<div class='pull-right'>" +
+  "<img class='media-object img-rounded' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center=" + location.coordinate.lat + "," + location.coordinate.lon + "&markers=color:black%7Csize:small%7C" + location.coordinate.lat + "," + location.coordinate.lon + "&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&zoom=11&size=200x100&key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8'/>" +
+  "</div>" +
+  "<div class='media-body'><b>" + location.illw + "</b> " + location.name +
+  "<br><small>" + location.country + "</small> " +
+  "<br><small>" + location.continent + "</small>" +
   "<br><small>" + location.dxcc + "</small> " +
-  "</div></div>";
+  "</div>" +
+  "</div>";
   return markup;
 
 }
@@ -82,6 +152,11 @@ function formatLocationSelection (location) {
 }
 
 $(document).ready(function() {
+
+  $("#success-alert").hide();
+  $("#success-alert").fadeTo(0,0);
+  $('#location-selection-container').hide();
+
   // Initialize our JSONRPCClient
   JSONRPCClient = new $.JsonRpcClient({
     ajaxUrl: getDefaultPostURL(),
@@ -133,7 +208,7 @@ $(document).ready(function() {
   });
 
   $('.location-search').on('select2:select', function (evt) {
-    updatePage(evt.params.data);
+    selectLocation(evt.params.data);
   });
 
   initializeButtons();

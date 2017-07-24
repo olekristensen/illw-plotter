@@ -13,7 +13,25 @@
 body {
   padding-top: 60px;
 }
+.select2-container .select2-selection--single {
+  padding: 2px 2px;
+  margin-bottom: 0;
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+  height: auto;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.428571429;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 32px;
+}
 
+#location-selection-container {
+  margin-top:10px;
+  margin-bottom:2px;
+
+}
 /*
  * http://stackoverflow.com/questions/11223615/how-to-use-font-awesome-for-checkboxes-etc
  */

@@ -17,21 +17,24 @@ struct Location{
     string dxcc;
     string continent;
     string illw;
-    ofxGeo::Coordinate coordinate;
+    ofx::Geo::Coordinate coordinate;
 };
 
 void to_json(ofJson& j, const Location& l);
 
 void from_json(const ofJson& j, Location& l);
-    
 
-class LogEntry{
+struct LogEntry{
 public:
     Location source;
     Location destination;
     string notes;
     Poco::DateTime timestamp;
 };
+
+void to_json(ofJson& j, const LogEntry& l);
+
+void from_json(const ofJson& j, LogEntry& l);
 
 
 class ofApp : public ofBaseApp{
@@ -86,6 +89,8 @@ public:
     
     void plotText(string str, ofPoint pos=ofPoint(0,0), float size=20, float rotation=0, TextAlignment alignment = LEFT, TextVerticalAlignment valign = BASELINE);
 
+    
+    void plotLogEntry(LogEntry e);
     ofPoint startPoint;
     ofPoint endPoint;
     float margin;
@@ -100,19 +105,23 @@ public:
     // SERVER
     
     // Registered methods.
-    void search(ofx::JSONRPC::MethodArgs& args);
+    void rpc_search(ofx::JSONRPC::MethodArgs& args);
+    void rpc_addLogEntry(ofx::JSONRPC::MethodArgs& args);
+    void rpc_getLog(ofx::JSONRPC::MethodArgs& args);
     
     /// \brief The server that handles the JSONRPC requests.
     ofx::HTTP::JSONRPCServer server;
     
     /// \brief Performs a search across locations.
     /// \param term the user term to search for.
-    vector<Location> doSearch(const std::string& term);
+    vector<Location> search(const std::string& term);
     
     // We use a mutex to protect any variables that can be
     // modified by multiple clients.  In our case, userText must be protected.
     // We mark the mutex as mutable so that it can be used in const functions.
     mutable std::mutex mutex;
+    
+    LogEntry addLogEntry(const Location loc);
 
 
 };

@@ -57,7 +57,17 @@ void ofApp::setup(){
     server.registerMethod("search",
                           "Performs a search across locations.",
                           this,
-                          &ofApp::search);
+                          &ofApp::rpc_search);
+    
+    server.registerMethod("addLogEntry",
+                          "Add a location to the log.",
+                          this,
+                          &ofApp::rpc_addLogEntry);
+    
+    server.registerMethod("getLog",
+                          "get the log.",
+                          this,
+                          &ofApp::rpc_getLog);
     
     // Start the server.
     server.start();
@@ -294,7 +304,8 @@ void ofApp::keyReleased(int key){
         plotter.clear();
         plotter.enableCapture();
         float x = plotter.getInputWidth()/4.0;
-        float y = 200;
+        float yinc = plotter.getInputHeight()/5.0;
+        float y = yinc;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
@@ -302,7 +313,7 @@ void ofApp::keyReleased(int key){
         plotText("this text is left baseline", ofPoint(x,y), 20, 180);
         plotter.setPen(1);
         plotText("this text is left baseline", ofPoint(x,y), 20);
-        y+=300;
+        y+=yinc;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
@@ -310,7 +321,7 @@ void ofApp::keyReleased(int key){
         plotText("this text is center baseline", ofPoint(x,y), 40, 180,CENTER);
         plotter.setPen(1);
         plotText("this text is center baseline", ofPoint(x,y), 40, 0,CENTER);
-        y+=300;
+        y+=yinc;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
@@ -319,7 +330,7 @@ void ofApp::keyReleased(int key){
         plotter.setPen(1);
         plotText("this text is right baseline", ofPoint(x,y), 10, 0,RIGHT);
         x*=3;
-        y=200;
+        y=yinc;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
@@ -327,7 +338,7 @@ void ofApp::keyReleased(int key){
         plotText("This text is left top", ofPoint(x,y), 10, 180,LEFT, TOP);
         plotter.setPen(1);
         plotText("This text is left top", ofPoint(x,y), 10, 0,LEFT, TOP);
-        y+=300;
+        y+=yinc;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
@@ -335,7 +346,7 @@ void ofApp::keyReleased(int key){
         plotText("This text is center middle", ofPoint(x,y), 20, 180,CENTER, MIDDLE);
         plotter.setPen(1);
         plotText("This text is center middle", ofPoint(x,y), 20, 0,CENTER, MIDDLE);
-        y+=300;
+        y+=yinc;
         plotter.setPen(2);
         plotter.line(x-10,y, x+10, y);
         plotter.line(x,y-10, x, y+10);
@@ -359,6 +370,46 @@ void ofApp::keyReleased(int key){
         plotter.line(x, y+c, x-r, y);
         plotText("N", ofPoint(x-r*1.2,y), 15, -90, CENTER);
     }
+}
+
+void ofApp::plotLogEntry(LogEntry e){
+    
+    //TODO: Finish this and remember to think about a sphere and do the haversine dst/angle before applying vector math
+
+    bool outgoing = false;
+
+    if(lighthouse.illw.compare(e.source.illw) == 0 && e.source.illw.size() > 0){
+        outgoing = true;
+        //set drawTo to the haversine distance divided by scaleDivisor and angle
+        auto destinationCoordinate = e.destination.coordinate;
+        
+    } else if (lighthouse.illw.compare(e.destination.illw) == 0 && e.source.illw.size() > 0) {
+        outgoing = false;
+        //set drawFrom to the haversine distance divided by scaleDivisor and angle
+        auto sourceCoordinate = e.source.coordinate;
+    } else {
+        return; // not to/from us
+    }
+
+    // find position within the hour
+    Poco::Timestamp now;
+    Poco::LocalDateTime nowLocal(now);
+    
+    Poco::LocalDateTime thisHourBegun = ofxTime::Utils::floor(nowLocal, Poco::Timespan::HOURS);
+    Poco::LocalDateTime thisHourEnds = thisHourBegun + ofxTime::Period::Hour();
+    
+    float normalisedHourlyRatio = ofMap(e.timestamp.utcTime(), thisHourBegun.utcTime(), thisHourEnds.utcTime(), 0.0, 1.0);
+    
+    ofPoint pointWithinTheHour(startPoint.getInterpolated(endPoint, normalisedHourlyRatio));
+    
+    auto sourceCoordinate = e.source.coordinate;
+    auto destinationCoordinate = e.destination.coordinate;
+
+    double scaleDivisor = ofxGeo::GeoUtils::EARTH_RADIUS_KM * PI; // max distance is diameter/2 (the other side of the earth)
+
+    
+    
+    
 }
 
 void ofApp::plotText(string str, ofPoint pos, float size, float rotation, TextAlignment alignment, TextVerticalAlignment valign){
@@ -562,31 +613,31 @@ bool ofApp::loadLighthouses(string xmlFilePath){
     
 }
 
-void ofApp::search(ofx::JSONRPC::MethodArgs& args)
+void ofApp::rpc_search(ofx::JSONRPC::MethodArgs& args)
 {
     // Set the result equal to the substring.
     std::unique_lock<std::mutex> lock(mutex);
 
-    ofLogVerbose("ofApp::search") << args.params.dump(4);
+    ofLogVerbose("ofApp::rpc_search") << args.params.dump(4);
     
-    vector<Location> result = doSearch(args.params);
+    vector<Location> result = search(args.params);
     
     args.result = result;
 
-    ofLogVerbose("ofApp::search") << args.result.dump(4);
+    ofLogVerbose("ofApp::rpc_search") << args.result.dump(4);
 }
 
-vector<Location> ofApp::doSearch(const std::string& term)
+vector<Location> ofApp::search(const std::string& term)
 {
-    ofLogVerbose("ofApp::doSearch") << term;
+    ofLogVerbose("ofApp::search") << term;
 
     vector<Location> results;
-    for(auto l : locations){
+    for(const auto l : locations){
         if(ofIsStringInString(ofToLower(l.name), ofToLower(term))){
             results.push_back(l);
         }
     }
-    ofLogVerbose("ofApp::doSearch") << results.size();
+    ofLogVerbose("ofApp::search") << results.size();
 
     return results;
 }
@@ -606,4 +657,55 @@ void from_json(const ofJson& j, Location& l) {
     l.coordinate = ofxGeo::Coordinate(j.at("coordinate").at("lat").get<double>(),  j.at("coordinate").at("lon").get<double>() );
 };
 
+void to_json(ofJson& j, const LogEntry& l) {
+    Poco::DateTimeFormatter fmt;
+    std::string timestamp = fmt.format(l.timestamp, Poco::DateTimeFormat::HTTP_FORMAT);
+    j = ofJson{{"source", l.source}, {"destination", l.destination}, {"notes", l.notes}, {"timestamp", timestamp } };
+};
+
+void from_json(const ofJson& j, LogEntry& l) {
+    l.source = j.at("source").get<Location>();
+    l.destination = j.at("destination").get<Location>();
+    l.notes = j.at("notes").get<std::string>();
+    Poco::DateTimeParser parser;
+    int tz;
+    l.timestamp = parser.parse(j.at("timestamp").get<std::string>(), tz);
+};
+
+
+void ofApp::rpc_addLogEntry(ofx::JSONRPC::MethodArgs& args)
+{
+    // Set the result equal to the substring.
+    std::unique_lock<std::mutex> lock(mutex);
+    
+    ofLogVerbose("ofApp::rpc_addLogEntry") << args.params.dump(4);
+    
+    Location newLocation = args.params;
+    
+    LogEntry newLog = addLogEntry(newLocation);
+    
+    args.result = newLog;
+    
+    ofLogVerbose("ofApp::rpc_addLogEntry") << args.result.dump(4);
+}
+
+void ofApp::rpc_getLog(ofx::JSONRPC::MethodArgs& args)
+{
+    ofLogVerbose("ofApp::rpc_getLogEntries") << args.params.dump(4);
+    vector<LogEntry> result;
+    int startFrom = args.params;
+    for(int i = startFrom; i < log.size(); i++){
+        result.push_back(log.at(i));
+    }
+    args.result = result;
+    ofLogVerbose("ofApp::rpc_getLogEntries") << args.result.dump(4);
+}
+
+LogEntry ofApp::addLogEntry(const Location loc){
+    LogEntry l;
+    l.source = lighthouse;
+    l.destination = loc;
+    log.push_back(l);
+    return l;
+}
 

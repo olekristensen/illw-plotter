@@ -89,20 +89,26 @@ void ofApp::update(){
 
 void ofApp::draw(){
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-    ofBackground(255, 255);
-    
-    // PLOTTER
-    ofNoFill();
-    ofSetColor(0, 255);
+    ofBackground(233, 255);
+    // page
+    ofFill();
+    ofSetColor(255,255);
+    ofPushView();
+    float scaleView = (ofGetWidth()-guiColumnWidth)*1.0/ofGetWidth();
+    ofTranslate(guiColumnWidth, ofGetHeight()/2.0);
+    ofScale(scaleView, scaleView);
+    ofTranslate(0, -ofGetHeight()/2.0);
+    plotter.pushMatrix();
+    ofDrawRectangle(0,0, plotter.getInputWidth(), plotter.getInputHeight());
+    //ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
+    plotter.popMatrix();
+
+    // plotter
     ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
+    ofNoFill();
     plotter.draw();
     path.draw();
-    /*
-     ofSetColor(255,0,255,200);
-     plotter.pushMatrix();
-     ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
-     plotter.popMatrix();
-     */
+    ofPopView();
     
     // GUI
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
@@ -170,10 +176,8 @@ void ofApp::draw(){
             
             if (filter.PassFilter(searchStr.c_str())){
                 if(ImGui::Button(searchStr.c_str())){
-                    LogEntry l;
-                    l.source = lighthouse;
-                    l.destination = locations[i];
-                    log.push_back(l);
+                    
+                    addLogEntry(locations[i]);
                     ///   * %d - days
                     ///   * %H - hours	 (00 .. 23)
                     ///   * %h - total hours (0 .. n)
@@ -185,7 +189,6 @@ void ofApp::draw(){
                     ///   * %c - centisecond (0 .. 9)
                     ///   * %F - fractional seconds/microseconds (000000 - 999999)
                     ///   * %% - percent sign
-                    ofLogNotice() << fmt.format(Poco::LocalDateTime(l.timestamp), "%H:%M:%S") << " " << l.source.name << " >> " << l.destination.name;
                 };
                 countMatches++;
             }
@@ -196,7 +199,7 @@ void ofApp::draw(){
         ImGui::EndChild();
         
         
-        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(1.0,1.0,1.0,1.0));
+//        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.40f, 0.39f, 0.38f, 0.5));
         ImGui::BeginChild("Log", ImVec2(0,100), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
         
@@ -207,7 +210,7 @@ void ofApp::draw(){
         ImGui::SetScrollHere();
         ImGui::PopStyleVar();
         ImGui::EndChild();
-        ImGui::PopStyleColor();
+//        ImGui::PopStyleColor();
         
         
         ImGui::Separator();
@@ -379,21 +382,16 @@ void ofApp::keyReleased(int key){
 
 void ofApp::plotLogEntry(LogEntry e){
     
-    //TODO: Finish this and remember to think about a sphere and do the haversine dst/angle before applying vector math
+    //TODO: Finish this an d remember to think about a sphere and do the haversine dst/angle before applying vector math
 
     bool outgoing = false;
 
     if(lighthouse.illw.compare(e.source.illw) == 0 && e.source.illw.size() > 0){
         outgoing = true;
-        //set drawTo to the haversine distance divided by scaleDivisor and angle
-        auto destinationCoordinate = e.destination.coordinate;
-        
     } else if (lighthouse.illw.compare(e.destination.illw) == 0 && e.source.illw.size() > 0) {
         outgoing = false;
-        //set drawFrom to the haversine distance divided by scaleDivisor and angle
-        auto sourceCoordinate = e.source.coordinate;
     } else {
-        return; // not to/from us
+        return; // not to or from us
     }
 
     // find position within the hour
@@ -405,13 +403,28 @@ void ofApp::plotLogEntry(LogEntry e){
     
     float normalisedHourlyRatio = ofMap(e.timestamp.utcTime(), thisHourBegun.utcTime(), thisHourEnds.utcTime(), 0.0, 1.0);
     
-    ofPoint pointWithinTheHour(startPoint.getInterpolated(endPoint, normalisedHourlyRatio));
+    ofPoint lighthousePointOnPaper(startPoint.getInterpolated(endPoint, normalisedHourlyRatio));
     
     auto sourceCoordinate = e.source.coordinate;
     auto destinationCoordinate = e.destination.coordinate;
 
     double scaleDivisor = ofxGeo::GeoUtils::EARTH_RADIUS_KM * PI; // max distance is diameter/2 (the other side of the earth)
 
+    double geoBearing = ofxGeo::GeoUtils::bearingHaversine(sourceCoordinate, destinationCoordinate);
+    double geoDistance = ofxGeo::GeoUtils::distanceHaversine(sourceCoordinate, destinationCoordinate);
+    float distanceOnPaper = geoDistance * radius / scaleDivisor;
+    
+    ofLogNotice() << sourceCoordinate << " " << destinationCoordinate << "bearing: " << geoBearing << " dist: " << geoDistance;
+    
+    ofPoint outsidePointOnPaper(-distanceOnPaper, 0);
+    outsidePointOnPaper.rotate(geoBearing, ofVec3f(0,0,1));
+    outsidePointOnPaper = outsidePointOnPaper + lighthousePointOnPaper;
+    
+    if(outgoing){
+        plotter.line(lighthousePointOnPaper.x, lighthousePointOnPaper.y, outsidePointOnPaper.x, outsidePointOnPaper.y);
+    } else {
+        plotter.line(outsidePointOnPaper.x, outsidePointOnPaper.y, lighthousePointOnPaper.x, lighthousePointOnPaper.y);
+    }
     
     
     
@@ -710,6 +723,7 @@ LogEntry ofApp::addLogEntry(const Location loc){
     LogEntry l;
     l.source = lighthouse;
     l.destination = loc;
+    plotLogEntry(l);
     log.push_back(l);
     return l;
 }

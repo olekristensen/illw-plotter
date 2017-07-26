@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <!-- Force latest IE rendering engine or ChromeFrame if installed -->
+  <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+  <meta charset="utf-8">
+  <title>ILLW Plotter</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no">
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <!-- Bootstrap styles -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="/css/font-awesome.min.css">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="/css/select2.min.css">
+  <!-- Syntax highlighting. -->
+  <link rel="stylesheet" href="/css/prism.css">
+  <!-- Generic page styles -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+  .compass {
+    position: relative;
+  	top: 0px;
+    margin: 2% 2%;
+    width: 96%;
+    padding-top: 96%; /* 1:1 Aspect Ratio */
+    z-index: 2030;
+  }
+
+  .compass .disc {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
+
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><strong>ILLW</strong> compass</a>
+      </div>
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li><a href="/">Logger</a></li>
+          <li><a href="/compass.html">Compass</a></li>
+        </ul>
+        <p class="navbar-text navbar-right">by <a href="http://ole.kristensen.name" class="navbar-link">ole kristensen</a></p>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
+  <div class="container">
+
+    <br>
+
+    <div class="compass" id="compassDisc">
+        <div class="disc" id="compassDiscImg">
+          <div class="arrow" id="compassDiscArrow"></div>
+        </div>
+    </div>
+
+    <div id="distance" class="text-center">
+    </div>
+
+    <br/>
+
+    <div class="panel panel-default" style="display:none;">
+      <button id="refresh-log" class="btn btn-default btn-xs pull-right" style="margin-top:14px;margin-bottom:0px;margin-right:15px;" type="button">Refresh</button>
+      <div class="panel-body">
+        <div class="pull-left">
+          <strong>Log</strong>
+        </div>
+      </div>
+      <div class="panel-footer">
+      <!-- Table -->
+      <table class="table table-condensed" id="log">
+        <thead><tr><th>Timestamp</th><th>Bearing</th><th>Distance</th><th>ILLW</th><th>Country</th><th>Name</th></tr></thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+  </div>
+
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/bootstrap.min.js"></script>
+  <script src="/js/jquery.jsonrpcclient.js"></script>
+  <script src="/js/jquery.json.js"></script>
+  <script src="/js/select2.min.js"></script>
+  <script src="/js/prism.js"></script>
+  <script src="/js/ofxUtils.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

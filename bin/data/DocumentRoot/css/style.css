@@ -27,11 +27,47 @@ body {
   height: 32px;
 }
 
-#location-selection-container {
+.location-selection-container {
   margin-top:10px;
   margin-bottom:2px;
-
 }
-/*
- * http://stackoverflow.com/questions/11223615/how-to-use-font-awesome-for-checkboxes-etc
- */
+
+#log {
+  width:100%;
+}
+
+#log thead, #log tbody { display: block; width:100%;}
+
+#log tbody {
+    height: 200px;       /* Just for the demo          */
+    overflow-y: auto;    /* Trigger vertical scroll    */
+    overflow-x: hidden;  /* Hide the horizontal scroll */
+}
+
+#log tr, #log td {
+  transition: background-color 3s;
+}
+
+.compass {
+  position: relative;
+	top: 5px;
+	right: 0px;
+  width: 100px;
+	height: 100px;
+	z-index: 2030;
+}
+
+.compass .disc {
+	background: url('/img/compass.svg');
+	width: 100%;
+	height: 100%;
+	background-size: 100%;
+}
+
+.compass .disc .arrow {
+	background: url('/img/arrow.svg');
+	width: 100%;
+	height: 100%;
+	background-size: 100%;
+  transition: transform 1s;
+}

@@ -16,27 +16,60 @@
   <link rel="stylesheet" href="css/select2.min.css">
   <!-- Syntax highlighting. -->
   <link rel="stylesheet" href="css/prism.css">
+  <!-- google search -->
+  <link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
   <!-- Generic page styles -->
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+  .compass {
+    width: 120px;
+    height: 120px;
+  }
+  </style>
+
 </head>
 <body>
-  <div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">ILLW Plotter</a>
-      </div>
-    </div>
-  </div>
+
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#"><strong>ILLW</strong> logger</a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li><a href="/">Logger</a></li>
+            <li><a href="/compass.html">Compass</a></li>
+          </ul>
+          <p class="navbar-text navbar-right">by <a href="http://ole.kristensen.name" class="navbar-link">ole kristensen</a></p>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
 
   <div class="container">
-    <h2>ILLW Plotter</h2>
+    <div class="compass pull-right" id="compassDisc">
+        <div class="disc" id="compassDiscImg">
+          <div class="arrow" id="compassDiscArrow"></div>
+        </div>
+    </div>
+
+    <h2>ILLW Plotter <small>logger</small></h2>
 
     <div class="alert alert-success" id="success-alert">
       <button type="button" class="close" data-dismiss="alert">x</button>
       <strong>Success! </strong>
     </div>
 
-    <div class="panel panel-default">
+    <div class="panel panel-default" id="illw-search">
       <div class="panel-body">
         <div class="pull-left">
           <strong>Search ILLW lighthouse</strong>
@@ -48,16 +81,39 @@
             <option></option>
           </select>
           <span class="input-group-btn">
-            <button id="add-log-entry" class="btn btn-default" type="button">Add log entry</button>
+            <button id="illw-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
           </span>
         </div>
-          <div class="panel panel-default" id="location-selection-container">
-            <div class="panel-body" id="location-selection">
+          <div class="panel panel-default location-selection-container">
+            <div class="panel-body location-selection">
             </div>
           </div>
       </div>
     </div>
+    <div class="panel panel-default" id="google-search">
+      <div class="panel-body">
+        <div class="pull-left">
+          <strong>Search Place</strong>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <div class="input-group">
+            <div id="locationField" style="width: 100%">
+              <input id="autocomplete" style="width: 100%"  class="form-control" placeholder="Enter your address"
+                     onFocus="geolocate()" type="text"></input>
+            </div>
+          <span class="input-group-btn">
+            <button id="google-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
+          </span>
+        </div>
+        <div class="panel panel-default location-selection-container">
+          <div class="panel-body location-selection">
+          </div>
+        </div>
+      </div>
+    </div>
     <br><br><br>
+
     <div class="panel panel-default">
       <button id="refresh-log" class="btn btn-default btn-xs pull-right" style="margin-top:14px;margin-bottom:0px;margin-right:15px;" type="button">Refresh</button>
       <div class="panel-body">
@@ -66,9 +122,14 @@
         </div>
       </div>
       <div class="panel-footer">
-        <textarea class="form-control" id="log" rows="6" readonly></textarea>
-      </div>
+      <!-- Table -->
+      <table class="table table-condensed" id="log">
+        <thead><tr><th>Timestamp</th><th>Bearing</th><th>Distance</th><th>ILLW</th><th>Country</th><th>Name</th></tr></thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
+  </div>
 
 
 
@@ -82,5 +143,6 @@
   <script src="./js/prism.js"></script>
   <script src="./js/ofxUtils.js"></script>
   <script src="./js/main.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8&libraries=places&callback=initAutocomplete"></script>
 </body>
 </html>

@@ -26,6 +26,7 @@ void from_json(const ofJson& j, Location& l);
 
 struct LogEntry{
 public:
+    int number;
     Location source;
     Location destination;
     string notes;
@@ -101,6 +102,9 @@ public:
     
     ofxImGui::Gui gui;
     int guiColumnWidth = 250;
+    double makeFakeLogsEverySeconds = 5;
+    double nextLogSeconds = 0;
+    
     
     // SERVER
     

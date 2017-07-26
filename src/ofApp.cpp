@@ -83,6 +83,12 @@ void ofApp::setup(){
 }
 
 void ofApp::update(){
+ 
+    if(makeFakeLogsEverySeconds > 0.0 && nextLogSeconds < ofGetElapsedTimef()){
+        int locationNumber = ofRandom(0, locations.size()-1);
+        addLogEntry(locations[locationNumber]);
+        nextLogSeconds = ofGetElapsedTimef() + makeFakeLogsEverySeconds;
+    }
     
     plotter.update();
 }
@@ -303,7 +309,7 @@ void ofApp::keyReleased(int key){
             plotter.line(x, halfHeight-10, x, halfHeight+10);
             
             plotter.setPen(2);
-            plotText(ofToString(i), ofPoint(x ,halfHeight-13), 7, -90, LEFT, MIDDLE);
+            plotText(ofToString(60-i), ofPoint(x ,halfHeight-13), 7, -90, LEFT, MIDDLE);
             
         }
     }
@@ -395,14 +401,16 @@ void ofApp::plotLogEntry(LogEntry e){
     }
 
     // find position within the hour
-    Poco::Timestamp now;
-    Poco::LocalDateTime nowLocal(now);
+
+    Poco::DateTime timestamp(e.timestamp);
     
-    Poco::LocalDateTime thisHourBegun = ofxTime::Utils::floor(nowLocal, Poco::Timespan::HOURS);
-    Poco::LocalDateTime thisHourEnds = thisHourBegun + ofxTime::Period::Hour();
+    Poco::DateTime thisHourBegan = ofxTime::Utils::floor(timestamp, Poco::Timespan::HOURS);
+    Poco::DateTime thisHourEnds = thisHourBegan + ofxTime::Period::Hour();
     
-    float normalisedHourlyRatio = ofMap(e.timestamp.utcTime(), thisHourBegun.utcTime(), thisHourEnds.utcTime(), 0.0, 1.0);
-    
+    float normalisedHourlyRatio = ofMap(timestamp.utcTime()*1.0, thisHourBegan.utcTime()*1.0, thisHourEnds.utcTime()*1.0, 0.0, 1.0);
+
+    ofLogNotice() << normalisedHourlyRatio << " " << ofxTime::Utils::format(thisHourBegan) << " " << ofxTime::Utils::format(thisHourEnds) << " " << ofxTime::Utils::format(timestamp);
+
     ofPoint lighthousePointOnPaper(startPoint.getInterpolated(endPoint, normalisedHourlyRatio));
     
     auto sourceCoordinate = e.source.coordinate;
@@ -414,7 +422,7 @@ void ofApp::plotLogEntry(LogEntry e){
     double geoDistance = ofxGeo::GeoUtils::distanceHaversine(sourceCoordinate, destinationCoordinate);
     float distanceOnPaper = geoDistance * radius / scaleDivisor;
     
-    ofLogNotice() << sourceCoordinate << " " << destinationCoordinate << "bearing: " << geoBearing << " dist: " << geoDistance;
+    //ofLogNotice() << sourceCoordinate << " " << destinationCoordinate << "bearing: " << geoBearing << " dist: " << geoDistance;
     
     ofPoint outsidePointOnPaper(-distanceOnPaper, 0);
     outsidePointOnPaper.rotate(geoBearing, ofVec3f(0,0,1));
@@ -613,7 +621,7 @@ bool ofApp::loadLighthouses(string xmlFilePath){
                 
                 l.coordinate = cOfx;
                 
-                ofLogNotice() << ofxGeo::GeoUtils::distanceHaversine(hammerenFyr, cOfx) << "km til " << l.country << " " << l.name << " retning " << ofxGeo::GeoUtils::bearingHaversine(hammerenFyr, cOfx);
+                ofLogVerbose() << ofxGeo::GeoUtils::distanceHaversine(hammerenFyr, cOfx) << "km til " << l.country << " " << l.name << " retning " << ofxGeo::GeoUtils::bearingHaversine(hammerenFyr, cOfx);
                 
                 
             }
@@ -662,7 +670,7 @@ vector<Location> ofApp::search(const std::string& term)
 
 
 void to_json(ofJson& j, const Location& l) {
-    j = ofJson{{"name", l.name}, {"country", l.country}, {"dxcc", l.dxcc}, {"continent", l.continent}, {"illw", l.illw}, {"coordinate", { {"lat", l.coordinate.getLatitude()}, {"lon", l.coordinate.getLongitude() } } } };
+    j = ofJson{{"name", l.name}, {"country", l.country}, {"dxcc", l.dxcc}, {"continent", l.continent}, {"illw", l.illw}, {"coordinate", { {"lat", l.coordinate.getLatitude()}, {"lon", l.coordinate.getLongitude() } } }};
 };
 
 void from_json(const ofJson& j, Location& l) {
@@ -678,7 +686,7 @@ void from_json(const ofJson& j, Location& l) {
 void to_json(ofJson& j, const LogEntry& l) {
     Poco::DateTimeFormatter fmt;
     std::string timestamp = fmt.format(l.timestamp, Poco::DateTimeFormat::HTTP_FORMAT);
-    j = ofJson{{"source", l.source}, {"destination", l.destination}, {"notes", l.notes}, {"timestamp", timestamp } };
+    j = ofJson{{"source", l.source}, {"destination", l.destination}, {"notes", l.notes}, {"timestamp", timestamp }, {"distance", ofx::Geo::GeoUtils::distanceHaversine(l.source.coordinate, l.destination.coordinate) }, {"bearing", ofx::Geo::GeoUtils::bearingHaversine(l.source.coordinate, l.destination.coordinate)  } };
 };
 
 void from_json(const ofJson& j, LogEntry& l) {
@@ -723,6 +731,8 @@ LogEntry ofApp::addLogEntry(const Location loc){
     LogEntry l;
     l.source = lighthouse;
     l.destination = loc;
+    ofx::HTTP::WebSocketFrame frame("refreshLog");
+    server.webSocketRoute().broadcast(frame);
     plotLogEntry(l);
     log.push_back(l);
     return l;

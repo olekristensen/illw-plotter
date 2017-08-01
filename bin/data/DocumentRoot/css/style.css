@@ -71,3 +71,7 @@ body {
 	background-size: 100%;
   transition: transform 1s;
 }
+
+.pac-container {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}

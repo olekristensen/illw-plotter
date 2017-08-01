@@ -8,6 +8,7 @@
 #include "ofxImGui.h"
 #include "ofxJSONRPC.h"
 #include "ofxHersheyFont.h"
+#include "ofxIconvCpp.h"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
@@ -91,6 +92,7 @@ public:
     void plotText(string str, ofPoint pos=ofPoint(0,0), float size=20, float rotation=0, TextAlignment alignment = LEFT, TextVerticalAlignment valign = BASELINE);
 
     
+    void plotPageBeginning();
     void plotLogEntry(LogEntry e);
     ofPoint startPoint;
     ofPoint endPoint;
@@ -102,8 +104,10 @@ public:
     
     ofxImGui::Gui gui;
     int guiColumnWidth = 250;
-    double makeFakeLogsEverySeconds = 5;
-    double nextLogSeconds = 0;
+    bool makeFakeLogs = false;
+    float makeFakeLogsEverySecondsMin = 0;
+    float makeFakeLogsEverySecondsMax = 0;
+    double nextFakeLogSeconds = 0;
     
     
     // SERVER

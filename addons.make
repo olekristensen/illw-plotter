@@ -12,3 +12,4 @@ ofxSSLManager
 ofxMediaType
 ofxNetworkUtils
 ofxHersheyFont
+ofxIconvCpp

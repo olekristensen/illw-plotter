@@ -28,6 +28,8 @@ var initialOffset = null
 
 var selectedLocation
 
+var locationTerms
+
 var googleMapsApi = 'AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8'
 
 function updateCompassArrow (obj) {
@@ -86,11 +88,24 @@ function addLogEntry (location, v) {
 }
 
 function successAlert (message) {
-  $('#success-alert').html(message)
-  $('#success-alert').fadeTo(2000, 500, function () {
-    $('#success-alert').fadeTo(2000, 0)
-  })
+    $('#alert').addClass('alert-success');
+    $('#alert').removeClass('alert-warning');
+    alert(message);
 }
+
+function warningAlert (message) {
+    $('#alert').addClass('alert-warning');
+    $('#alert').removeClass('alert-success');
+    alert(message);
+}
+
+function alert(message) {
+    $('#alert').html(message)
+    $('#alert').fadeTo(2000, 500, function () {
+                               $('#alert').fadeTo(2000, 0)
+                               })
+}
+
 
 function refreshLog () {
   var $this = $(this)
@@ -140,11 +155,32 @@ function initializeButtons () {
   })
 }
 
-function selectLocation (location, container) {
+function selectLocation (location, container, focus, zoom = 13) {
 
   var markup = "<div class='media'>" +
     "<div class='pull-right'>" +
-    "<img class='media-object img-rounded' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center=" + location.coordinate.lat + ',' + location.coordinate.lon + '&markers=color:black%7Csize:small%7C' + location.coordinate.lat + ',' + location.coordinate.lon + '&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&zoom=13&size=400x120&key=' + googleMapsApi + "'/>" +
+    "<img class='media-object img-rounded' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center="
+    if(container.is($('#locator-search'))){
+        
+        var level = Math.floor($('#locatorField').val().length / 2.0);
+        var size;
+        
+        if(level == 1){
+            size = {lat:10, lon:20}
+        } else if (level == 2){
+            size = {lat:1, lon:2}
+        } else if (level == 3) {
+            size = {lat:(1.0/60.0)*2.5, lon:(1.0/60.0)*5}
+        }
+        
+        var c = location.coordinate
+        
+        markup += c.lat + ',' + c.lon + '&path=color:0x66dd66aa|weight:2|fillcolor:0x66dd6633|geodesic:true|' + (c.lat-(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0)) +'|' + (c.lat-(size.lat/2.0)) + ',' + (c.lon+(size.lon/2.0)) +'|' + (c.lat+(size.lat/2.0)) + ',' + (c.lon+(size.lon/2.0)) +'|' + (c.lat+(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0)) + '|' + (c.lat-(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0))
+    } else {
+        markup += location.coordinate.lat + ',' + location.coordinate.lon + '&markers=color:black%7Csize:small%7C' + location.coordinate.lat + ',' + location.coordinate.lon + '&zoom=' + zoom
+    }
+    
+    markup += '&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&size=400x120&key=' + googleMapsApi + "'/>" +
     '</div>' +
     "<div class='media-body'><b>" + location.illw + '</b> ' + location.name +
     '<br><small>' + location.country + '</small> ' +
@@ -158,7 +194,7 @@ function selectLocation (location, container) {
   container.find('.location-selection').html(markup)
   container.find('.location-selection-container').slideDown(500)
   selectedLocation = location
-  container.find('.btn-add-log-entry').focus()
+  if(focus) container.find('.btn-add-log-entry').focus()
 }
 
 function formatLocation (location) {
@@ -174,6 +210,19 @@ function formatLocation (location) {
     '<br><small>' + location.dxcc + '</small> ' +
     '</div>' +
     '</div>'
+      
+    var tokens = locationTerms.split(' ');
+    
+    if(tokens.length > 0) {
+        for(var i = 0; i < tokens.length; i++){
+            var term = tokens[i];
+            var re = new RegExp(term.trim(),"gi");
+            markup = markup.replace(re, function myFunction(x){return '<mark>' + x + '</mark>';});
+        }
+    } else {
+        var re = new RegExp(locationTerms.trim(),"gi");
+        markup = markup.replace(re, function myFunction(x){return '<mark>' + x + '</mark>';});
+    }
   return markup
 }
 
@@ -202,8 +251,8 @@ function formatLogTable () {
 }
 
 $(document).ready(function () {
-  $('#success-alert').hide()
-  $('#success-alert').fadeTo(0, 0)
+  $('#alert').hide()
+  $('#alert').fadeTo(0, 0)
   $('.location-selection-container').each(function (i, v) {
     $(v).hide()
   })
@@ -224,6 +273,7 @@ $(document).ready(function () {
       name: 'Type to select'
     },
     ajax: {
+                                delay: 250,
       transport: function (params, success, failure) {
         var $this = $(this)
         JSONRPCClient.call('search', params.data.term,
@@ -239,8 +289,9 @@ $(document).ready(function () {
           // since we are using custom formatting functions we do not need to
           // alter the remote JSON data, except to indicate that infinite
           // scrolling can be used
-        console.log(data)
-
+        
+                                locationTerms = params.term
+                                
         var data = $.map(data, function (obj) {
           obj.id = obj.illw
           return obj
@@ -259,9 +310,125 @@ $(document).ready(function () {
   })
 
   $('#illw-search .location-search').on('select2:select', function (evt) {
-    selectLocation(evt.params.data, $('#illw-search'))
+    selectLocation(evt.params.data, $('#illw-search'),true)
   })
+                  
+                  $('#locatorField').on('keyup', function (evt) {
+                                    var value = evt.target.value;
+                                        console.log(evt)
+                                    if(value.length > 0){
+                                        var c = {lat:0, lon:0};
+                                        try {
+                                            
+                                            c = HamGridSquare.toLatLon(value, c);
+                                            $('#locatorField').parent().parent().removeClass('has-error');
+                                            $('#locatorField').parent().parent().addClass('has-success');
+                                            $('#locatorHelpBlock').html('the locator code is valid');
 
+                                        var level = Math.floor(value.length / 2.0);
+                                        var size;
+                                        
+                                        if(level == 1){
+                                        size = {lat:10, lon:20}
+                                        } else if (level == 2){
+                                        size = {lat:1, lon:2}
+                                        } else if (level == 3) {
+                                        size = {lat:(1.0/60.0)*2.5, lon:(1.0/60.0)*5}
+                                        }
+                                        
+                                        var geocoder = new google.maps.Geocoder;
+                                        
+                                        geocoder.geocode({'location': {'lat':c.lat, 'lng':c.lon}}, function(results, status) {
+                                                         var name = value
+                                                         var country = ''
+                                                         var dxcc = ''
+                                                         
+                                                         if (status === 'OK') {
+                                                         if (results[1]) {
+
+                                                         var divisor = 2*level;
+                                                         
+                                                         for (var i = 0; i < results.length ; i++){
+                                                            var r = results[i]
+                                                            if((i == results.length-1) || (r.geometry.viewport.contains({'lat':(c.lat-(size.lat/divisor)), 'lng':(c.lon-(size.lon/divisor))}) && r.geometry.viewport.contains({'lat':(c.lat+(size.lat/divisor)), 'lng':(c.lon+(size.lon/divisor))})) ){
+                                                                    for (var j = 0; j < r.address_components.length; j++) {
+                                                                        var addressType = r.address_components[j].types[0]
+                                                                        if (addressType == 'country') {
+                                                                            dxcc = r.address_components[j].short_name
+                                                                            country = r.address_components[j].long_name
+                                                                            if((i == results.length-1)) name = name + ', ' + r.address_components[j].long_name
+                                                                        } else {
+                                                                            name = name + ', ' + r.address_components[j].long_name
+                                                                        }
+                                                                        break
+                                                                    }
+                                                                }
+                                                            }
+                                                         
+                                                         
+                                                         var newLocation =
+                                                         {'illw': '',
+                                                         'name': name,
+                                                         'country': country,
+                                                         'dxcc': dxcc,
+                                                         'continent':'',
+                                                         'coordinate': c
+                                                         };
+                                                         
+                                                         selectLocation(newLocation, $('#locator-search'), (evt.key == "Enter"));
+
+                                                         
+                                                         } else {
+                                                         $('#locatorField').parent().parent().addClass('has-warning');
+                                                         $('#locatorField').parent().parent().removeClass('has-success');
+                                                         $('#locatorField').parent().parent().removeClass('has-error');
+
+                                                         $('#locatorHelpBlock').html("could not find a name for the locator");
+                                                         var newLocation =
+                                                         {'illw': '',
+                                                         'name': name,
+                                                         'country': country,
+                                                         'dxcc': dxcc,
+                                                         'continent':'',
+                                                         'coordinate': c
+                                                         };
+                                                         
+                                                         selectLocation(newLocation, $('#locator-search'), (evt.key == "Enter"));
+
+                                                         }
+                                                         } else {
+                                                         $('#locatorField').parent().parent().addClass('has-warning');
+                                                         $('#locatorField').parent().parent().removeClass('has-success');
+                                                         $('#locatorField').parent().parent().removeClass('has-error');
+                                                         $('#locatorHelpBlock').html("could not find a name for the locator");
+                                                         var newLocation =
+                                                         {'illw': '',
+                                                         'name': name,
+                                                         'country': country,
+                                                         'dxcc': dxcc,
+                                                         'continent':'',
+                                                         'coordinate': c
+                                                         };
+                                                         
+                                                         selectLocation(newLocation, $('#locator-search'), (evt.key == "Enter"));
+                                                         
+                                                         }
+                                                         });
+//                                        $.ajax({url: "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + c.lat + ',' + c.lon + "&bounds=" + (c.lat-(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0)) +'|' + (c.lat+(size.lat/2.0)) + ',' + (c.lon+(size.lon/2.0)) + "&key=" +googleMapsApi, success:
+                                        } catch (e) {
+                                            $('#locatorField').parent().parent().addClass('has-error');
+                                        $('#locatorField').parent().parent().removeClass('has-success');
+                                        $('#locatorField').parent().parent().removeClass('has-warning');
+                                            $('#locatorHelpBlock').html(e.split(':')[1]);
+                                        }
+                                    } else {
+                                        $('#locatorField').parent().parent().removeClass('has-error');
+                                        $('#locatorField').parent().parent().removeClass('has-success');
+                                        $('#locatorField').parent().parent().removeClass('has-warning');
+                                        $('#locatorHelpBlock').html('');
+                                    }
+                                   });
+                  
   refreshLog()
   formatLogTable()
   initializeButtons()
@@ -324,8 +491,7 @@ function initAutocomplete () {
       // location types.
   autocomplete = new google.maps.places.Autocomplete(
           /** @type {!HTMLInputElement} */(document.getElementById('autocomplete')),
-          {types: ['geocode']})
-  var geocoder = new google.maps.Geocoder;
+                                                     {types: ['geocode']})
 
         // When the user selects an address from the dropdown, populate the address
         // fields in the form.
@@ -364,7 +530,7 @@ function initAutocomplete () {
                 'lon': place.geometry.location.lng()}
         };
 
-      selectLocation(newLocation, $('#google-search'))
+      selectLocation(newLocation, $('#google-search'), true)
   });
 }
 

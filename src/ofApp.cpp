@@ -1,20 +1,29 @@
 #include "ofApp.h"
 
-
 //TODO:
 /*
- 0. make resolution independent
- 1. make function to draw a log entry (location and text)
- 2. make function to decode gridloc's
- 3. accept location in gridloc, geolib notations, lighthouses and islands etc.
- 4. make persistent list of all entries and mark if they are drawn
- 5. make http server to add entries
- 6. lookup entries from online spotter service?
+ 1. make function to decode gridloc's
+ 2. accept location in gridloc, lighthouses and islands etc.
+ 3. make persistent list ofxSqlite of all entries and mark if they are drawn
+ 4. make websocket clients reconnect...
  
  */
 
-void ofApp::setup(){
+bool compareLocations (Location i,Location j) {
+    
+    if(i.illw.length() > 1 && j.illw.length() > 1){
+        if(i.illw.substr(0,2).compare(j.illw.substr(0,2)) == 0 ){
+            return (ofToInt(i.illw.substr(2,i.illw.length())) < ofToInt(j.illw.substr(2,j.illw.length())));
+        } else {
+            return (i.illw < j.illw);
+        }
+    } else {
+        return (i.name < j.name);
+    }
+}
 
+void ofApp::setup(){
+    
     ofSetLogLevel(OF_LOG_NOTICE);
     
     // GUI
@@ -28,7 +37,7 @@ void ofApp::setup(){
     // PLOTTER
     
     plotter.setup( "/dev/tty.usbserial-FT5CHURVB" );
-
+    
     int pageW = ofGetScreenHeight()-600;
     int pageH = (float)pageW * (float)(sqrt(2.0));
     ofSetWindowShape( pageH, pageW );
@@ -83,11 +92,11 @@ void ofApp::setup(){
 }
 
 void ofApp::update(){
- 
-    if(makeFakeLogsEverySeconds > 0.0 && nextLogSeconds < ofGetElapsedTimef()){
+    
+    if(makeFakeLogs && nextFakeLogSeconds < ofGetElapsedTimef()){
         int locationNumber = ofRandom(0, locations.size()-1);
         addLogEntry(locations[locationNumber]);
-        nextLogSeconds = ofGetElapsedTimef() + makeFakeLogsEverySeconds;
+        nextFakeLogSeconds = ofGetElapsedTimef() + ofRandom(makeFakeLogsEverySecondsMin,  makeFakeLogsEverySecondsMax);
     }
     
     plotter.update();
@@ -108,7 +117,7 @@ void ofApp::draw(){
     ofDrawRectangle(0,0, plotter.getInputWidth(), plotter.getInputHeight());
     //ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
     plotter.popMatrix();
-
+    
     // plotter
     ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
     ofNoFill();
@@ -178,34 +187,23 @@ void ofApp::draw(){
         
         for (int i = 0; i < locations.size(); i++){
             string searchStr = locations[i].illw + " " + locations[i].country + " " + " " + locations[i].name;
-            
-            
             if (filter.PassFilter(searchStr.c_str())){
                 if(ImGui::Button(searchStr.c_str())){
-                    
                     addLogEntry(locations[i]);
-                    ///   * %d - days
-                    ///   * %H - hours	 (00 .. 23)
-                    ///   * %h - total hours (0 .. n)
-                    ///   * %M - minutes (00 .. 59)
-                    ///   * %m - total minutes (0 .. n)
-                    ///   * %S - seconds (00 .. 59)
-                    ///   * %s - total seconds (0 .. n)
-                    ///   * %i - milliseconds (000 .. 999)
-                    ///   * %c - centisecond (0 .. 9)
-                    ///   * %F - fractional seconds/microseconds (000000 - 999999)
-                    ///   * %% - percent sign
                 };
                 countMatches++;
             }
-            //            if(countMatches>15) break;
+            if(countMatches>15) break;
         }
         
         ImGui::PopStyleVar();
         ImGui::EndChild();
+        ImGui::Checkbox("Fake", &makeFakeLogs);
+        ImGui::SameLine();
+
+        ImGui::DragFloatRange2("Interval", &makeFakeLogsEverySecondsMin, &makeFakeLogsEverySecondsMax, 1.0, 60.0);
         
-        
-//        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.40f, 0.39f, 0.38f, 0.5));
+        //        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.40f, 0.39f, 0.38f, 0.5));
         ImGui::BeginChild("Log", ImVec2(0,100), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,1)); // Tighten spacing
         
@@ -216,7 +214,7 @@ void ofApp::draw(){
         ImGui::SetScrollHere();
         ImGui::PopStyleVar();
         ImGui::EndChild();
-//        ImGui::PopStyleColor();
+        //        ImGui::PopStyleColor();
         
         
         ImGui::Separator();
@@ -260,6 +258,9 @@ void ofApp::draw(){
             }
         }
         
+        if(ImGui::Button("New Page")){
+            plotPageBeginning();
+        }
         ImGui::PushFont(ImGuiIO().Fonts->Fonts[1]);
         ImGui::TextUnformatted("Interface");
         ImGui::PopFont();
@@ -284,114 +285,143 @@ void ofApp::keyPressed(int key){
 }
 
 void ofApp::keyReleased(int key){
-    if( key == 'c' ) {
-        plotter.circle(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()), ofRandom(2,500));
+    /*
+     if( key == 'c' ) {
+     plotter.circle(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()), ofRandom(2,500));
+     }
+     if(key == 'l'){
+     float height = plotter.getInputHeight();
+     float width = plotter.getInputWidth();
+     float halfHeight = height * 0.5;
+     float radius = height / 6.;
+     float margin = height / 10.;
+     
+     plotter.setPen(1);
+     
+     plotter.line(margin+radius, halfHeight, width-(margin+radius), halfHeight);
+     plotter.circle(margin+radius, halfHeight,radius);
+     plotter.circle(width-(margin+radius), halfHeight,radius);
+     
+     for(int i = 0; i <= 60; i++) {
+     float lineWidth = (width - (2*(margin+radius)));
+     float step = lineWidth / (60.0);
+     float x = margin+radius+(step*i);
+     
+     plotter.setPen(1);
+     plotter.line(x, halfHeight-10, x, halfHeight+10);
+     
+     plotter.setPen(2);
+     plotText(ofToString(60-i), ofPoint(x ,halfHeight-13), 7, -90, LEFT, MIDDLE);
+     
+     }
+     }
+     if(key == 't') {
+     // test text
+     plotter.clear();
+     plotter.enableCapture();
+     float x = plotter.getInputWidth()/4.0;
+     float yinc = plotter.getInputHeight()/5.0;
+     float y = yinc;
+     plotter.setPen(2);
+     plotter.line(x-10,y, x+10, y);
+     plotter.line(x,y-10, x, y+10);
+     plotter.circle(x, y, 5);
+     plotText("this text is left baseline", ofPoint(x,y), 20, 180);
+     plotter.setPen(1);
+     plotText("this text is left baseline", ofPoint(x,y), 20);
+     y+=yinc;
+     plotter.setPen(2);
+     plotter.line(x-10,y, x+10, y);
+     plotter.line(x,y-10, x, y+10);
+     plotter.circle(x, y, 5);
+     plotText("this text is center baseline", ofPoint(x,y), 40, 180,CENTER);
+     plotter.setPen(1);
+     plotText("this text is center baseline", ofPoint(x,y), 40, 0,CENTER);
+     y+=yinc;
+     plotter.setPen(2);
+     plotter.line(x-10,y, x+10, y);
+     plotter.line(x,y-10, x, y+10);
+     plotter.circle(x, y, 5);
+     plotText("this text is right baseline", ofPoint(x,y), 10, 180,RIGHT);
+     plotter.setPen(1);
+     plotText("this text is right baseline", ofPoint(x,y), 10, 0,RIGHT);
+     x*=3;
+     y=yinc;
+     plotter.setPen(2);
+     plotter.line(x-10,y, x+10, y);
+     plotter.line(x,y-10, x, y+10);
+     plotter.circle(x, y, 5);
+     plotText("This text is left top", ofPoint(x,y), 10, 180,LEFT, TOP);
+     plotter.setPen(1);
+     plotText("This text is left top", ofPoint(x,y), 10, 0,LEFT, TOP);
+     y+=yinc;
+     plotter.setPen(2);
+     plotter.line(x-10,y, x+10, y);
+     plotter.line(x,y-10, x, y+10);
+     plotter.circle(x, y, 5);
+     plotText("This text is center middle", ofPoint(x,y), 20, 180,CENTER, MIDDLE);
+     plotter.setPen(1);
+     plotText("This text is center middle", ofPoint(x,y), 20, 0,CENTER, MIDDLE);
+     y+=yinc;
+     plotter.setPen(2);
+     plotter.line(x-10,y, x+10, y);
+     plotter.line(x,y-10, x, y+10);
+     plotter.circle(x, y, 5);
+     plotText("this text is right bottom", ofPoint(x,y), 40, 180,RIGHT, BOTTOM);
+     plotter.setPen(1);
+     plotText("this text is right bottom", ofPoint(x,y), 40, 0,RIGHT, BOTTOM);
+     
+     }
+     if ( key == 'n') {
+     // north compass
+     float r = margin/3.0;
+     float c = r/7.0;
+     float x = plotter.getInputWidth()-(margin/1.5);
+     float y = halfHeight;
+     plotter.circle(x, y, r);
+     plotter.circle(x,y,r/10.0);
+     plotter.line(x, y-c, x+r, y);
+     plotter.line(x, y+c, x+r, y);
+     plotter.line(x, y-c, x-r, y);
+     plotter.line(x, y+c, x-r, y);
+     plotText("N", ofPoint(x-r*1.2,y), 15, -90, CENTER);
+     }
+     */
+}
+
+void ofApp::plotPageBeginning(){
+    // north compass
+    float r = margin/3.0;
+    float c = r/7.0;
+    float x = plotter.getInputWidth()-margin;
+    float y = halfHeight;
+    plotter.setPen(2);
+    plotter.circle(x, y, r);
+    plotter.line(x, y-c, x+r, y);
+    plotter.line(x, y+c, x+r, y);
+    plotter.setPen(1);
+    for(float i = r/10.0; i > 0; i-=0.4){
+        plotter.circle(x,y,i);
     }
-    if(key == 'l'){
-        float height = plotter.getInputHeight();
-        float width = plotter.getInputWidth();
-        float halfHeight = height * 0.5;
-        float radius = height / 6.;
-        float margin = height / 10.;
-        
-        plotter.setPen(1);
-        
-        plotter.line(margin+radius, halfHeight, width-(margin+radius), halfHeight);
-        plotter.circle(margin+radius, halfHeight,radius);
-        plotter.circle(width-(margin+radius), halfHeight,radius);
-        
-        for(int i = 0; i <= 60; i++) {
-            float lineWidth = (width - (2*(margin+radius)));
-            float step = lineWidth / (60.0);
-            float x = margin+radius+(step*i);
-            
-            plotter.setPen(1);
-            plotter.line(x, halfHeight-10, x, halfHeight+10);
-            
-            plotter.setPen(2);
-            plotText(ofToString(60-i), ofPoint(x ,halfHeight-13), 7, -90, LEFT, MIDDLE);
-            
-        }
+    for(float i = c; i > 0; i-=0.4){
+        plotter.line(x, y-i, x-r, y);
+        plotter.line(x, y+i, x-r, y);
     }
-    if(key == 't') {
-        // test text
-        plotter.clear();
-        plotter.enableCapture();
-        float x = plotter.getInputWidth()/4.0;
-        float yinc = plotter.getInputHeight()/5.0;
-        float y = yinc;
-        plotter.setPen(2);
-        plotter.line(x-10,y, x+10, y);
-        plotter.line(x,y-10, x, y+10);
-        plotter.circle(x, y, 5);
-        plotText("this text is left baseline", ofPoint(x,y), 20, 180);
-        plotter.setPen(1);
-        plotText("this text is left baseline", ofPoint(x,y), 20);
-        y+=yinc;
-        plotter.setPen(2);
-        plotter.line(x-10,y, x+10, y);
-        plotter.line(x,y-10, x, y+10);
-        plotter.circle(x, y, 5);
-        plotText("this text is center baseline", ofPoint(x,y), 40, 180,CENTER);
-        plotter.setPen(1);
-        plotText("this text is center baseline", ofPoint(x,y), 40, 0,CENTER);
-        y+=yinc;
-        plotter.setPen(2);
-        plotter.line(x-10,y, x+10, y);
-        plotter.line(x,y-10, x, y+10);
-        plotter.circle(x, y, 5);
-        plotText("this text is right baseline", ofPoint(x,y), 10, 180,RIGHT);
-        plotter.setPen(1);
-        plotText("this text is right baseline", ofPoint(x,y), 10, 0,RIGHT);
-        x*=3;
-        y=yinc;
-        plotter.setPen(2);
-        plotter.line(x-10,y, x+10, y);
-        plotter.line(x,y-10, x, y+10);
-        plotter.circle(x, y, 5);
-        plotText("This text is left top", ofPoint(x,y), 10, 180,LEFT, TOP);
-        plotter.setPen(1);
-        plotText("This text is left top", ofPoint(x,y), 10, 0,LEFT, TOP);
-        y+=yinc;
-        plotter.setPen(2);
-        plotter.line(x-10,y, x+10, y);
-        plotter.line(x,y-10, x, y+10);
-        plotter.circle(x, y, 5);
-        plotText("This text is center middle", ofPoint(x,y), 20, 180,CENTER, MIDDLE);
-        plotter.setPen(1);
-        plotText("This text is center middle", ofPoint(x,y), 20, 0,CENTER, MIDDLE);
-        y+=yinc;
-        plotter.setPen(2);
-        plotter.line(x-10,y, x+10, y);
-        plotter.line(x,y-10, x, y+10);
-        plotter.circle(x, y, 5);
-        plotText("this text is right bottom", ofPoint(x,y), 40, 180,RIGHT, BOTTOM);
-        plotter.setPen(1);
-        plotText("this text is right bottom", ofPoint(x,y), 40, 0,RIGHT, BOTTOM);
-        
-    }
-    if ( key == 'n') {
-        // north compass
-        float r = margin/3.0;
-        float c = r/7.0;
-        float x = plotter.getInputWidth()-(margin/1.5);
-        float y = halfHeight;
-        plotter.circle(x, y, r);
-        plotter.circle(x,y,r/10.0);
-        plotter.line(x, y-c, x+r, y);
-        plotter.line(x, y+c, x+r, y);
-        plotter.line(x, y-c, x-r, y);
-        plotter.line(x, y+c, x-r, y);
-        plotText("N", ofPoint(x-r*1.2,y), 15, -90, CENTER);
-    }
+    
+    plotText("N", ofPoint(x-r*1.2,y), 7, -90, CENTER);
+    
+    plotter.setPen(2);
+    plotText("ole kristensen", ofPoint(x+r*1.5,y), 2.5, -90, CENTER);
+    plotText("2017", ofPoint(4+x+r*1.5,y), 2.5, -90, CENTER);
+    
 }
 
 void ofApp::plotLogEntry(LogEntry e){
     
     //TODO: Finish this an d remember to think about a sphere and do the haversine dst/angle before applying vector math
-
+    
     bool outgoing = false;
-
+    
     if(lighthouse.illw.compare(e.source.illw) == 0 && e.source.illw.size() > 0){
         outgoing = true;
     } else if (lighthouse.illw.compare(e.destination.illw) == 0 && e.source.illw.size() > 0) {
@@ -399,34 +429,41 @@ void ofApp::plotLogEntry(LogEntry e){
     } else {
         return; // not to or from us
     }
-
+    
     // find position within the hour
-
+    
     Poco::DateTime timestamp(e.timestamp);
     
     Poco::DateTime thisHourBegan = ofxTime::Utils::floor(timestamp, Poco::Timespan::HOURS);
     Poco::DateTime thisHourEnds = thisHourBegan + ofxTime::Period::Hour();
     
-    float normalisedHourlyRatio = ofMap(timestamp.utcTime()*1.0, thisHourBegan.utcTime()*1.0, thisHourEnds.utcTime()*1.0, 0.0, 1.0);
-
+    ofxTime::Interval hour(thisHourBegan, thisHourEnds);
+    
+    float normalisedHourlyRatio = hour.map(timestamp.timestamp());
+    
     ofLogNotice() << normalisedHourlyRatio << " " << ofxTime::Utils::format(thisHourBegan) << " " << ofxTime::Utils::format(thisHourEnds) << " " << ofxTime::Utils::format(timestamp);
-
+    
+    
     ofPoint lighthousePointOnPaper(startPoint.getInterpolated(endPoint, normalisedHourlyRatio));
     
     auto sourceCoordinate = e.source.coordinate;
     auto destinationCoordinate = e.destination.coordinate;
-
-    double scaleDivisor = ofxGeo::GeoUtils::EARTH_RADIUS_KM * PI; // max distance is diameter/2 (the other side of the earth)
-
+    
+    double scaleDivisor = ofxGeo::GeoUtils::EARTH_RADIUS_KM * PI / 2.0; // max distance is diameter/2 (the other side of the earth)
+    
     double geoBearing = ofxGeo::GeoUtils::bearingHaversine(sourceCoordinate, destinationCoordinate);
     double geoDistance = ofxGeo::GeoUtils::distanceHaversine(sourceCoordinate, destinationCoordinate);
     float distanceOnPaper = geoDistance * radius / scaleDivisor;
     
     //ofLogNotice() << sourceCoordinate << " " << destinationCoordinate << "bearing: " << geoBearing << " dist: " << geoDistance;
     
-    ofPoint outsidePointOnPaper(-distanceOnPaper, 0);
-    outsidePointOnPaper.rotate(geoBearing, ofVec3f(0,0,1));
-    outsidePointOnPaper = outsidePointOnPaper + lighthousePointOnPaper;
+    ofPoint outsidePoint(-distanceOnPaper, 0);
+    outsidePoint.rotate(geoBearing, ofVec3f(0,0,1));
+    ofPoint outsidePointOnPaper = outsidePoint + lighthousePointOnPaper;
+    
+    // PLOT LINE
+    
+    plotter.setPen(1);
     
     if(outgoing){
         plotter.line(lighthousePointOnPaper.x, lighthousePointOnPaper.y, outsidePointOnPaper.x, outsidePointOnPaper.y);
@@ -434,7 +471,31 @@ void ofApp::plotLogEntry(LogEntry e){
         plotter.line(outsidePointOnPaper.x, outsidePointOnPaper.y, lighthousePointOnPaper.x, lighthousePointOnPaper.y);
     }
     
+    plotter.setPen(4);
     
+    plotter.circle(lighthousePointOnPaper.x, lighthousePointOnPaper.y, distanceOnPaper);
+
+    
+    // PLOT TEXT
+    
+    stringstream ss;
+    if(outgoing){
+        ss << e.destination.illw << " " << e.destination.name  << " " << e.destination.country;
+    } else {
+        ss << e.source.illw << " " << e.source.name << " " << e.source.country;
+    }
+    
+    iconvpp::converter conv("ascii//TRANSLIT",   // output encoding
+                            "utf-8",   // input encoding
+                            true,      // ignore errors (optional, default: fasle)
+                            1024);     // buffer size   (optional, default: 1024)
+    ;
+    std::string translitterated;
+    conv.convert(ss.str(), translitterated);
+    
+    plotter.setPen(2);
+    
+    plotText(translitterated, outsidePoint.getScaled(outsidePoint.length()+3) + lighthousePointOnPaper, 2.5, fmodf(180+geoBearing, 360), TextAlignment::LEFT, TextVerticalAlignment::MIDDLE);
     
 }
 
@@ -443,7 +504,7 @@ void ofApp::plotText(string str, ofPoint pos, float size, float rotation, TextAl
     float sizeFactor = (size/21.0)*(plotter.getInputWidth()/1200.0);
     
     auto c = hersheyFont.getPath(str, sizeFactor);
-
+    
     float width = hersheyFont.getWidth(str, sizeFactor);
     float mHeight = 14.0*sizeFactor;
     
@@ -635,6 +696,9 @@ bool ofApp::loadLighthouses(string xmlFilePath){
             lighthouse = l;
         }
     }
+    
+    std::sort (locations.begin(), locations.end(), compareLocations);
+    
     return true;
     
 }
@@ -642,24 +706,60 @@ bool ofApp::loadLighthouses(string xmlFilePath){
 void ofApp::rpc_search(ofx::JSONRPC::MethodArgs& args)
 {
     // Set the result equal to the substring.
-    std::unique_lock<std::mutex> lock(mutex);
-
+    // std::unique_lock<std::mutex> lock(mutex);
+    
     ofLogVerbose("ofApp::rpc_search") << args.params.dump(4);
     
     vector<Location> result = search(args.params);
     
     args.result = result;
-
+    
     ofLogVerbose("ofApp::rpc_search") << args.result.dump(4);
 }
 
 vector<Location> ofApp::search(const std::string& term)
 {
     ofLogVerbose("ofApp::search") << term;
-
+    
+    auto terms = ofSplitString(term, " ");
+    
+    Location locationLowerCase;
+    string termLowerCase;
+    
     vector<Location> results;
     for(const auto l : locations){
-        if(ofIsStringInString(ofToLower(l.name), ofToLower(term))){
+
+        locationLowerCase = l;
+        locationLowerCase.name = ofToLower(l.name);
+        locationLowerCase.illw = ofToLower(l.illw);
+        locationLowerCase.country = ofToLower(l.country);
+        locationLowerCase.dxcc = ofToLower(l.dxcc);
+
+        int foundTerms = 0;
+        bool foundIllw = false;
+        
+        for(const auto t : terms){
+            termLowerCase = ofToLower(t);
+            // search all fields
+            if(ofIsStringInString(locationLowerCase.dxcc, termLowerCase)
+                 || ofIsStringInString(locationLowerCase.illw, termLowerCase)
+                 || ofIsStringInString(locationLowerCase.country, termLowerCase)
+                 || ofIsStringInString(locationLowerCase.name, termLowerCase)
+                 ){
+                foundTerms++;
+            } else {
+                // do an extra expensive check on illw codes regardless of zeros and spaces
+                if(termLowerCase.length() > 2 && (locationLowerCase.illw.substr(0,2).compare(termLowerCase.substr(0,2)) == 0)){
+                    if(ofToInt(locationLowerCase.illw.substr(2,locationLowerCase.illw.length())) == ofToInt(termLowerCase.substr(2,termLowerCase.length()))){
+                        foundIllw = true;
+                        break;
+                    }
+                    
+                }
+            }
+            
+        }
+        if(foundIllw || foundTerms == terms.size()){
             results.push_back(l);
         }
     }

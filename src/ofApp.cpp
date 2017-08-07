@@ -1,8 +1,8 @@
 #include "ofApp.h"
+#include <boost/algorithm/searching/boyer_moore.hpp>
 
 //TODO:
 /*
- 1. make function to decode gridloc's
  2. accept location in gridloc, lighthouses and islands etc.
  3. make persistent list ofxSqlite of all entries and mark if they are drawn
  4. make websocket clients reconnect...
@@ -45,6 +45,7 @@ void ofApp::setup(){
     plotter.setInputHeight( pageW );
     plotter.setPenColor(1, ofColor::darkBlue);
     plotter.setPenColor(2, ofColor::black);
+    plotter.setPenColor(3, ofColor::yellow);
     plotter.enableCapture();
     plotter.setPen(1);
     
@@ -200,7 +201,7 @@ void ofApp::draw(){
         ImGui::EndChild();
         ImGui::Checkbox("Fake", &makeFakeLogs);
         ImGui::SameLine();
-
+        
         ImGui::DragFloatRange2("Interval", &makeFakeLogsEverySecondsMin, &makeFakeLogsEverySecondsMax, 1.0, 60.0);
         
         //        ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.40f, 0.39f, 0.38f, 0.5));
@@ -474,7 +475,7 @@ void ofApp::plotLogEntry(LogEntry e){
     plotter.setPen(4);
     
     plotter.circle(lighthousePointOnPaper.x, lighthousePointOnPaper.y, distanceOnPaper);
-
+    
     
     // PLOT TEXT
     
@@ -659,11 +660,16 @@ bool ofApp::loadLighthouses(string xmlFilePath){
     
     for(auto node : lhNodes){
         Location l;
-        l.country = node.getChild("country").getValue();
-        l.name = node.getChild("name").getValue();
-        l.dxcc = node.getChild("dxcc").getValue();
-        l.continent = node.getChild("continent").getValue();
         l.illw = node.getChild("illw").getValue();
+        l.searchStringLowercase = ofToLower(l.illw);
+        l.name = node.getChild("name").getValue();
+        l.searchStringLowercase += " " + ofToLower(l.name);
+        l.country = node.getChild("country").getValue();
+        l.searchStringLowercase += " " + ofToLower(l.country);
+        l.dxcc = node.getChild("dxcc").getValue();
+        l.searchStringLowercase += " " + ofToLower(l.dxcc);
+        l.continent = node.getChild("continent").getValue();
+        l.searchStringLowercase += " " + ofToLower(l.continent);
         
         string coords = node.getChild("geo").getValue();
         
@@ -719,53 +725,53 @@ void ofApp::rpc_search(ofx::JSONRPC::MethodArgs& args)
 
 vector<Location> ofApp::search(const std::string& term)
 {
-    ofLogVerbose("ofApp::search") << term;
+    auto needles = ofSplitString(ofToLower(ofTrim(term)), " ");
     
-    auto terms = ofSplitString(term, " ");
+    vector<Location> matches;
     
-    Location locationLowerCase;
-    string termLowerCase;
+    vector<boost::algorithm::boyer_moore<std::string::const_iterator>> searches;
     
-    vector<Location> results;
+    for(const std::string n : needles){
+        searches.push_back( boost::algorithm::boyer_moore<std::string::const_iterator> ( n.begin (), n.end ()) );
+    }
+    
     for(const auto l : locations){
-
-        locationLowerCase = l;
-        locationLowerCase.name = ofToLower(l.name);
-        locationLowerCase.illw = ofToLower(l.illw);
-        locationLowerCase.country = ofToLower(l.country);
-        locationLowerCase.dxcc = ofToLower(l.dxcc);
-
+        
+        const std::string haystack(l.searchStringLowercase);
+        
+        const std::string illwLowercase(ofToLower(l.illw));
+        
         int foundTerms = 0;
         bool foundIllw = false;
+        int nIt = 0;
         
-        for(const auto t : terms){
-            termLowerCase = ofToLower(t);
+        for(const std::string n : needles){
+            
             // search all fields
-            if(ofIsStringInString(locationLowerCase.dxcc, termLowerCase)
-                 || ofIsStringInString(locationLowerCase.illw, termLowerCase)
-                 || ofIsStringInString(locationLowerCase.country, termLowerCase)
-                 || ofIsStringInString(locationLowerCase.name, termLowerCase)
-                 ){
+            
+//            if(searches.at(nIt++)( haystack.begin(), haystack.end()) != std::make_pair(haystack.end (), haystack.end ())){
+            if(boost::algorithm::boyer_moore_search( haystack.begin(), haystack.end(), n.begin(), n.end()) != std::make_pair(haystack.end (), haystack.end ())){
                 foundTerms++;
             } else {
                 // do an extra expensive check on illw codes regardless of zeros and spaces
-                if(termLowerCase.length() > 2 && (locationLowerCase.illw.substr(0,2).compare(termLowerCase.substr(0,2)) == 0)){
-                    if(ofToInt(locationLowerCase.illw.substr(2,locationLowerCase.illw.length())) == ofToInt(termLowerCase.substr(2,termLowerCase.length()))){
+                if(n.length() > 2 && (illwLowercase.substr(0,2).compare(n.substr(0,2)) == 0)){
+                    if(ofToInt(illwLowercase.substr(2,illwLowercase.length())) == ofToInt(n.substr(2,n.length()))){
                         foundIllw = true;
                         break;
                     }
                     
                 }
             }
-            
         }
-        if(foundIllw || foundTerms == terms.size()){
-            results.push_back(l);
+        
+        if(foundIllw || foundTerms == needles.size()){
+            matches.push_back(l);
         }
     }
-    ofLogVerbose("ofApp::search") << results.size();
-
-    return results;
+    
+    ofLogVerbose("ofApp::search") << matches.size();
+    
+    return matches;
 }
 
 

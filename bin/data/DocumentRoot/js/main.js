@@ -32,12 +32,31 @@ var locationTerms
 
 var googleMapsApi = 'AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8'
 
-function updateCompassArrow (obj) {
-  var compassDiscArrow = document.getElementById('compassDiscArrow')
-  compassDiscArrow.style.webkitTransform = 'rotate(' + obj.bearing + 'deg)'
-  compassDiscArrow.style.MozTransform = 'rotate(' + obj.bearing + 'deg)'
-  compassDiscArrow.style.transform = 'rotate(' + obj.bearing + 'deg)'
+$.fn.rotateElement = function(angle) {
+    var elementToRotate = this,
+    deg = angle,
+    deg2radians = Math.PI * 2 / 360,
+    rad = deg * deg2radians ,
+    costheta = Math.cos(rad),
+    sintheta = Math.sin(rad),
 
+    m11 = costheta,
+    m12 = -sintheta,
+    m21 = sintheta,
+    m22 = costheta,
+    matrixValues = 'M11=' + m11 + ', M12='+ m12 +', M21='+ m21 +', M22='+ m22;
+
+    elementToRotate.css('-webkit-transform','rotate('+deg+'deg)')
+    .css('-moz-transform','rotate('+deg+'deg)')
+    .css('-ms-transform','rotate('+deg+'deg)')
+    .css('transform','rotate('+deg+'deg)')
+    .css('filter', 'progid:DXImageTransform.Microsoft.Matrix(sizingMethod=\'auto expand\','+matrixValues+')')
+    .css('-ms-filter', 'progid:DXImageTransform.Microsoft.Matrix(SizingMethod=\'auto expand\','+matrixValues+')');
+    return elementToRotate;
+}
+
+function updateCompassArrow (obj) {
+  $('#compassDiscArrow').rotateElement(obj.bearing)
   $('#distance').html('<h2><span class="label label-default">' + Math.round(obj.distance, 2) + ' km</span></h2><p class="lead"><strong>' + obj.destination.illw + '</strong> ' + obj.destination.name + '<br/>' + obj.destination.country + '</p>')
 }
 
@@ -73,13 +92,11 @@ function addLogEntry (location, v) {
   function (result) {
     if (result != null) {
       successAlert('<strong>' + result.destination.illw + '</strong> ' + result.destination.name + ' has been logged.')
-
-      $(v).parent().parent().parent().find('input' ).val('');
-      $(v).parent().parent().parent().find('.location-selection-container').slideUp(500)
+      hideSelection(v)
+      $(v).parent().parent().parent().find('input').val('')
       $(v).parent().parent().parent().find('.location-search').val('').trigger('change')
       $(v).parent().parent().parent().find('.location-search').select2('open')
-      $(v).parent().parent().parent().find('input' ).focus();
-
+      $(v).parent().parent().parent().find('input').focus()
     }
   },
   function (error) {
@@ -87,25 +104,28 @@ function addLogEntry (location, v) {
   })
 }
 
+function hideSelection (v) {
+  $(v).parent().parent().parent().find('.location-selection-container').slideUp(500)
+}
+
 function successAlert (message) {
-    $('#alert').addClass('alert-success');
-    $('#alert').removeClass('alert-warning');
-    alert(message);
+  $('#alert').addClass('alert-success')
+  $('#alert').removeClass('alert-warning')
+  alert(message)
 }
 
 function warningAlert (message) {
-    $('#alert').addClass('alert-warning');
-    $('#alert').removeClass('alert-success');
-    alert(message);
+  $('#alert').addClass('alert-warning')
+  $('#alert').removeClass('alert-success')
+  alert(message)
 }
 
-function alert(message) {
-    $('#alert').html(message)
-    $('#alert').fadeTo(2000, 500, function () {
-                               $('#alert').fadeTo(2000, 0)
-                               })
+function alert (message) {
+  $('#alert').html(message)
+  $('#alert').fadeTo(2000, 500, function () {
+    $('#alert').fadeTo(2000, 0)
+  })
 }
-
 
 function refreshLog () {
   var $this = $(this)
@@ -156,31 +176,29 @@ function initializeButtons () {
 }
 
 function selectLocation (location, container, focus, zoom = 13) {
-
   var markup = "<div class='media'>" +
     "<div class='pull-right'>" +
     "<img class='media-object img-rounded' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center="
-    if(container.is($('#locator-search'))){
-        
-        var level = Math.floor($('#locatorField').val().length / 2.0);
-        var size;
-        
-        if(level == 1){
-            size = {lat:10, lon:20}
-        } else if (level == 2){
-            size = {lat:1, lon:2}
-        } else if (level == 3) {
-            size = {lat:(1.0/60.0)*2.5, lon:(1.0/60.0)*5}
-        }
-        
-        var c = location.coordinate
-        
-        markup += c.lat + ',' + c.lon + '&path=color:0x66dd66aa|weight:2|fillcolor:0x66dd6633|geodesic:true|' + (c.lat-(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0)) +'|' + (c.lat-(size.lat/2.0)) + ',' + (c.lon+(size.lon/2.0)) +'|' + (c.lat+(size.lat/2.0)) + ',' + (c.lon+(size.lon/2.0)) +'|' + (c.lat+(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0)) + '|' + (c.lat-(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0))
-    } else {
-        markup += location.coordinate.lat + ',' + location.coordinate.lon + '&markers=color:black%7Csize:small%7C' + location.coordinate.lat + ',' + location.coordinate.lon + '&zoom=' + zoom
+  if (container.is($('#locator-search'))) {
+    var level = Math.floor($('#locatorField').val().length / 2.0)
+    var size
+
+    if (level == 1) {
+      size = {lat: 10, lon: 20}
+    } else if (level == 2) {
+      size = {lat: 1, lon: 2}
+    } else if (level == 3) {
+      size = {lat: (1.0 / 60.0) * 2.5, lon: (1.0 / 60.0) * 5}
     }
-    
-    markup += '&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&size=400x120&key=' + googleMapsApi + "'/>" +
+
+    var c = location.coordinate
+
+    markup += c.lat + ',' + c.lon + '&path=color:0xFFBE31ff|weight:2|fillcolor:0xFFBE3166|geodesic:true|' + (c.lat - (size.lat / 2.0)) + ',' + (c.lon - (size.lon / 2.0)) + '|' + (c.lat - (size.lat / 2.0)) + ',' + (c.lon + (size.lon / 2.0)) + '|' + (c.lat + (size.lat / 2.0)) + ',' + (c.lon + (size.lon / 2.0)) + '|' + (c.lat + (size.lat / 2.0)) + ',' + (c.lon - (size.lon / 2.0)) + '|' + (c.lat - (size.lat / 2.0)) + ',' + (c.lon - (size.lon / 2.0))
+  } else {
+    markup += location.coordinate.lat + ',' + location.coordinate.lon + '&markers=color:0xFFBE31FF%7Csize:small%7C' + location.coordinate.lat + ',' + location.coordinate.lon + '&zoom=' + zoom
+  }
+
+  markup += '&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&size=400x120&key=' + googleMapsApi + "'/>" +
     '</div>' +
     "<div class='media-body'><b>" + location.illw + '</b> ' + location.name +
     '<br><small>' + location.country + '</small> ' +
@@ -194,35 +212,27 @@ function selectLocation (location, container, focus, zoom = 13) {
   container.find('.location-selection').html(markup)
   container.find('.location-selection-container').slideDown(500)
   selectedLocation = location
-  if(focus) container.find('.btn-add-log-entry').focus()
+  if (focus) container.find('.btn-add-log-entry').focus()
 }
 
 function formatLocation (location) {
   if (location.loading) return 'Fetching results from server...'
 
+      var tokens = locationTerms.trim().split(' ')
+      var exp = tokens.join('|');
+    var re = new RegExp(exp, 'gi')
+
   var markup = "<div class='media'>" +
     "<div class='pull-right'>" +
     "<img class='media-object img-rounded' src='https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&center=" + location.coordinate.lat + ',' + location.coordinate.lon + '&markers=color:black%7Csize:small%7C' + location.coordinate.lat + ',' + location.coordinate.lon + '&style=element:geometry.stroke|visibility:off&style=feature:landscape|element:geometry|saturation:-100&style=feature:water|saturation:-100|invert_lightness:true&zoom=11&size=200x100&key=' + googleMapsApi + "'/>" +
     '</div>' +
-    "<div class='media-body'><b>" + location.illw + '</b> ' + location.name +
-    '<br><small>' + location.country + '</small> ' +
-    '<br><small>' + location.continent + '</small>' +
-    '<br><small>' + location.dxcc + '</small> ' +
+    "<div class='media-body'><b>" + location.illw.replace(re, function myFunction (x) { return '<mark>' + x + '</mark>' }) + '</b> ' + location.name.replace(re, function myFunction (x) { return '<mark>' + x + '</mark>' }) +
+    '<br><small>' + location.country.replace(re, function myFunction (x) { return '<mark>' + x + '</mark>' }) + '</small> ' +
+    '<br><small>' + location.continent.replace(re, function myFunction (x) { return '<mark>' + x + '</mark>' }) + '</small>' +
+    '<br><small>' + location.dxcc.replace(re, function myFunction (x) { return '<mark>' + x + '</mark>' }) + '</small> ' +
     '</div>' +
     '</div>'
-      
-    var tokens = locationTerms.split(' ');
-    
-    if(tokens.length > 0) {
-        for(var i = 0; i < tokens.length; i++){
-            var term = tokens[i];
-            var re = new RegExp(term.trim(),"gi");
-            markup = markup.replace(re, function myFunction(x){return '<mark>' + x + '</mark>';});
-        }
-    } else {
-        var re = new RegExp(locationTerms.trim(),"gi");
-        markup = markup.replace(re, function myFunction(x){return '<mark>' + x + '</mark>';});
-    }
+
   return markup
 }
 
@@ -273,7 +283,7 @@ $(document).ready(function () {
       name: 'Type to select'
     },
     ajax: {
-                                delay: 250,
+      delay: 250,
       transport: function (params, success, failure) {
         var $this = $(this)
         JSONRPCClient.call('search', params.data.term,
@@ -289,9 +299,9 @@ $(document).ready(function () {
           // since we are using custom formatting functions we do not need to
           // alter the remote JSON data, except to indicate that infinite
           // scrolling can be used
-        
-                                locationTerms = params.term
-                                
+
+        locationTerms = params.term
+
         var data = $.map(data, function (obj) {
           obj.id = obj.illw
           return obj
@@ -310,125 +320,180 @@ $(document).ready(function () {
   })
 
   $('#illw-search .location-search').on('select2:select', function (evt) {
-    selectLocation(evt.params.data, $('#illw-search'),true)
+    selectLocation(evt.params.data, $('#illw-search'), true)
   })
-                  
-                  $('#locatorField').on('keyup', function (evt) {
-                                    var value = evt.target.value;
-                                        console.log(evt)
-                                    if(value.length > 0){
-                                        var c = {lat:0, lon:0};
-                                        try {
-                                            
-                                            c = HamGridSquare.toLatLon(value, c);
-                                            $('#locatorField').parent().parent().removeClass('has-error');
-                                            $('#locatorField').parent().parent().addClass('has-success');
-                                            $('#locatorHelpBlock').html('the locator code is valid');
 
-                                        var level = Math.floor(value.length / 2.0);
-                                        var size;
-                                        
-                                        if(level == 1){
-                                        size = {lat:10, lon:20}
-                                        } else if (level == 2){
-                                        size = {lat:1, lon:2}
-                                        } else if (level == 3) {
-                                        size = {lat:(1.0/60.0)*2.5, lon:(1.0/60.0)*5}
-                                        }
-                                        
-                                        var geocoder = new google.maps.Geocoder;
-                                        
-                                        geocoder.geocode({'location': {'lat':c.lat, 'lng':c.lon}}, function(results, status) {
-                                                         var name = value
-                                                         var country = ''
-                                                         var dxcc = ''
-                                                         
-                                                         if (status === 'OK') {
-                                                         if (results[1]) {
+  $('#locatorField').on('keyup', function (evt) {
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Meta', 'Alt', 'Shift', 'Control'].includes(evt.key)) {
+      var value = evt.target.value
+      console.log(evt)
+      if (value.length > 0) {
+        var c = {lat: 0, lon: 0}
+      // make sure the capitalisation and numbering scheme is consistent
+        var filteredValue = ''
+        for (var i = 0; i < value.length; i++) {
+          if (i >= 0 && i < 2) {
+            filteredValue += value.charAt(i).toUpperCase()
+          } else if (i < 4) {
+/*            if (!isNaN(value.charAt(i))) {
+              filteredValue += parseInt(value.charAt(i))
+            }
+*/
+            filteredValue += value.charAt(i)
+          } else if (i < 6) {
+            filteredValue += value.charAt(i).toLowerCase()
+          } else {
+            filteredValue += value.charAt(i)
+          }
+        }
+        if(value != filteredValue){
+          value = filteredValue
+          evt.target.value = filteredValue
+        }
 
-                                                         var divisor = 2*level;
-                                                         
-                                                         for (var i = 0; i < results.length ; i++){
-                                                            var r = results[i]
-                                                            if((i == results.length-1) || (r.geometry.viewport.contains({'lat':(c.lat-(size.lat/divisor)), 'lng':(c.lon-(size.lon/divisor))}) && r.geometry.viewport.contains({'lat':(c.lat+(size.lat/divisor)), 'lng':(c.lon+(size.lon/divisor))})) ){
-                                                                    for (var j = 0; j < r.address_components.length; j++) {
-                                                                        var addressType = r.address_components[j].types[0]
-                                                                        if (addressType == 'country') {
-                                                                            dxcc = r.address_components[j].short_name
-                                                                            country = r.address_components[j].long_name
-                                                                            if((i == results.length-1)) name = name + ', ' + r.address_components[j].long_name
-                                                                        } else {
-                                                                            name = name + ', ' + r.address_components[j].long_name
-                                                                        }
-                                                                        break
-                                                                    }
-                                                                }
-                                                            }
-                                                         
-                                                         
-                                                         var newLocation =
-                                                         {'illw': '',
-                                                         'name': name,
-                                                         'country': country,
-                                                         'dxcc': dxcc,
-                                                         'continent':'',
-                                                         'coordinate': c
-                                                         };
-                                                         
-                                                         selectLocation(newLocation, $('#locator-search'), (evt.key == "Enter"));
+      // try converting to decimal coordinates
+        try {
+          c = HamGridSquare.toLatLon(value, c)
+          $('#locatorField').parent().parent().removeClass('has-error')
+          $('#locatorField').parent().parent().addClass('has-success')
+          $('#locatorHelpBlock').html('the locator code is valid')
 
-                                                         
-                                                         } else {
-                                                         $('#locatorField').parent().parent().addClass('has-warning');
-                                                         $('#locatorField').parent().parent().removeClass('has-success');
-                                                         $('#locatorField').parent().parent().removeClass('has-error');
+        // find the size of the grid square
 
-                                                         $('#locatorHelpBlock').html("could not find a name for the locator");
-                                                         var newLocation =
-                                                         {'illw': '',
-                                                         'name': name,
-                                                         'country': country,
-                                                         'dxcc': dxcc,
-                                                         'continent':'',
-                                                         'coordinate': c
-                                                         };
-                                                         
-                                                         selectLocation(newLocation, $('#locator-search'), (evt.key == "Enter"));
+          var level = Math.floor(value.length / 2.0)
+          var size
 
-                                                         }
-                                                         } else {
-                                                         $('#locatorField').parent().parent().addClass('has-warning');
-                                                         $('#locatorField').parent().parent().removeClass('has-success');
-                                                         $('#locatorField').parent().parent().removeClass('has-error');
-                                                         $('#locatorHelpBlock').html("could not find a name for the locator");
-                                                         var newLocation =
-                                                         {'illw': '',
-                                                         'name': name,
-                                                         'country': country,
-                                                         'dxcc': dxcc,
-                                                         'continent':'',
-                                                         'coordinate': c
-                                                         };
-                                                         
-                                                         selectLocation(newLocation, $('#locator-search'), (evt.key == "Enter"));
-                                                         
-                                                         }
-                                                         });
-//                                        $.ajax({url: "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + c.lat + ',' + c.lon + "&bounds=" + (c.lat-(size.lat/2.0)) + ',' + (c.lon-(size.lon/2.0)) +'|' + (c.lat+(size.lat/2.0)) + ',' + (c.lon+(size.lon/2.0)) + "&key=" +googleMapsApi, success:
-                                        } catch (e) {
-                                            $('#locatorField').parent().parent().addClass('has-error');
-                                        $('#locatorField').parent().parent().removeClass('has-success');
-                                        $('#locatorField').parent().parent().removeClass('has-warning');
-                                            $('#locatorHelpBlock').html(e.split(':')[1]);
-                                        }
-                                    } else {
-                                        $('#locatorField').parent().parent().removeClass('has-error');
-                                        $('#locatorField').parent().parent().removeClass('has-success');
-                                        $('#locatorField').parent().parent().removeClass('has-warning');
-                                        $('#locatorHelpBlock').html('');
-                                    }
-                                   });
-                  
+          if (level == 1) {
+            size = {lat: 10, lon: 20}
+          } else if (level == 2) {
+            size = {lat: 1, lon: 2}
+          } else if (level == 3) {
+            size = {lat: (1.0 / 60.0) * 2.5, lon: (1.0 / 60.0) * 5}
+          }
+
+        // try retrieving a name from google's reverse geocoding
+
+          var geocoder = new google.maps.Geocoder()
+
+          geocoder.geocode({'location': {'lat': c.lat, 'lng': c.lon}}, function (results, status) {
+            var name = value
+            var country = ''
+            var dxcc = ''
+
+            if (status === 'OK') {
+              if (results[1]) {
+                var divisor = 2 * level
+
+              // search for a geometry that contains our reduced square
+
+                var matches = 0
+
+                for (var i = 0; i < results.length; i++) {
+                  var r = results[i]
+                  if ((i == results.length - 1) || (r.geometry.viewport.contains({'lat': (c.lat - (size.lat / divisor)), 'lng': (c.lon - (size.lon / divisor))}) && r.geometry.viewport.contains({'lat': (c.lat + (size.lat / divisor)), 'lng': (c.lon + (size.lon / divisor))}))) {
+                    for (var j = 0; j < r.address_components.length; j++) {
+                      var addressType = r.address_components[j].types[0]
+                      if (addressType == 'country') {
+                        dxcc = r.address_components[j].short_name
+                        country = r.address_components[j].long_name
+                        if ((i == results.length - 1) && matches == 0 && j == 0) {
+                        name = name + ', ' + r.address_components[j].long_name
+                      }
+                      } else {
+                        matches++
+                        name = name + ', ' + r.address_components[j].long_name
+                      }
+                      break
+                    }
+                  }
+                }
+
+                var newLocation =
+                  {'illw': '',
+                    'name': name,
+                    'country': country,
+                    'dxcc': dxcc,
+                    'continent': '',
+                    'coordinate': c
+                  }
+                selectLocation(newLocation, $('#locator-search'), (evt.key == 'Enter'))
+              } else {
+              // empty results from google
+                $('#locatorField').parent().parent().addClass('has-warning')
+                $('#locatorField').parent().parent().removeClass('has-success')
+                $('#locatorField').parent().parent().removeClass('has-error')
+                $('#locatorHelpBlock').html('could not find a name for the locator')
+                var newLocation =
+                  {'illw': '',
+                    'name': name,
+                    'country': country,
+                    'dxcc': dxcc,
+                    'continent': '',
+                    'coordinate': c
+                  }
+                selectLocation(newLocation, $('#locator-search'), (evt.key == 'Enter'))
+              }
+            } else {
+            // geocoding failed getting results from google, lets look for oceans
+              $.ajax({
+                type: 'GET',
+                url: 'http://api.geonames.org/extendedFindNearby?lat=' + c.lat + '&lng=' + c.lon + '&username=olekristensen',
+                cache: true,
+                dataType: 'xml',
+                success: function (xml) {
+                  console.log(xml)
+                  $(xml).find('geonames').each(function () {
+                    $(this).find('ocean').each(function () {
+                      var name = $(this).find('name').text()
+                      var newLocation =
+                        {'illw': '',
+                          'name': value + ', ' + name,
+                          'country': '',
+                          'dxcc': '',
+                          'continent': '',
+                          'coordinate': c
+                        }
+                      selectLocation(newLocation, $('#locator-search'), (evt.key == 'Enter'))
+                    })
+                  })
+                },
+                error: function (e) {
+                  $('#locatorField').parent().parent().addClass('has-warning')
+                  $('#locatorField').parent().parent().removeClass('has-success')
+                  $('#locatorField').parent().parent().removeClass('has-error')
+                  $('#locatorHelpBlock').html('could not find a name for the locator')
+                  var newLocation =
+                    {'illw': '',
+                      'name': value,
+                      'country': '',
+                      'dxcc': '',
+                      'continent': '',
+                      'coordinate': c
+                    }
+                  selectLocation(newLocation, $('#locator-search'), (evt.key == 'Enter'))
+                }
+              })
+            }
+          })
+        } catch (e) {
+          // grid locator failed
+          $('#locatorField').parent().parent().addClass('has-error')
+          $('#locatorField').parent().parent().removeClass('has-success')
+          $('#locatorField').parent().parent().removeClass('has-warning')
+          $('#locatorHelpBlock').html(e.split(':')[1])
+          hideSelection($('#locator-search'))
+        }
+      } else {
+        // field is empty
+        $('#locatorField').parent().parent().removeClass('has-error')
+        $('#locatorField').parent().parent().removeClass('has-success')
+        $('#locatorField').parent().parent().removeClass('has-warning')
+        hideSelection($('#locator-search'))
+        $('#locatorHelpBlock').html('')
+      }
+    }
+  })
+
   refreshLog()
   formatLogTable()
   initializeButtons()
@@ -489,6 +554,7 @@ var placeSearch, autocomplete
 function initAutocomplete () {
       // Create the autocomplete object, restricting the search to geographical
       // location types.
+    if($('#autocomplete').length){
   autocomplete = new google.maps.places.Autocomplete(
           /** @type {!HTMLInputElement} */(document.getElementById('autocomplete')),
                                                      {types: ['geocode']})
@@ -496,43 +562,43 @@ function initAutocomplete () {
         // When the user selects an address from the dropdown, populate the address
         // fields in the form.
   autocomplete.addListener('place_changed', function () {
-
-    var place = autocomplete.getPlace();
+    var place = autocomplete.getPlace()
 
     if (!place.place_id) {
-      return;
+      return
     }
-      var country = ''
-      var dxcc = ''
-      var name = ''
-      for (var i = 0; i < place.address_components.length; i++) {
-        var addressType = place.address_components[i].types[0]
-        if (addressType == 'country') {
-          dxcc = place.address_components[i].short_name
-          country = place.address_components[i].long_name
-        } else {
-          if(name == ''){
+    var country = ''
+    var dxcc = ''
+    var name = ''
+    for (var i = 0; i < place.address_components.length; i++) {
+      var addressType = place.address_components[i].types[0]
+      if (addressType == 'country') {
+        dxcc = place.address_components[i].short_name
+        country = place.address_components[i].long_name
+      } else {
+        if (name == '') {
           name = place.address_components[i].long_name
-        }else{
+        } else {
           name = name + ', ' + place.address_components[i].long_name
         }
-        }
+      }
+    }
+
+    var newLocation =
+      {'illw': '',
+        'name': name,
+        'country': country,
+        'dxcc': '',
+        'continent': '',
+        'coordinate':
+        {'lat': place.geometry.location.lat(),
+          'lon': place.geometry.location.lng()}
       }
 
-      var newLocation =
-              {'illw': '',
-              'name': name,
-              'country': country,
-              'dxcc':'',
-              'continent':'',
-        'coordinate':
-                {'lat': place.geometry.location.lat(),
-                'lon': place.geometry.location.lng()}
-        };
-
-      selectLocation(newLocation, $('#google-search'), true)
-  });
-}
+    selectLocation(newLocation, $('#google-search'), true)
+  })
+       }
+       }
 
     // Bias the autocomplete object to the user's geographical location,
     // as supplied by the browser's 'navigator.geolocation' object.

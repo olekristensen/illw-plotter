@@ -9,6 +9,7 @@
 #include "ofxJSONRPC.h"
 #include "ofxHersheyFont.h"
 #include "ofxIconvCpp.h"
+#include "SQLiteCpp.h"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
@@ -19,6 +20,7 @@ struct Location{
     string continent;
     string illw;
     ofx::Geo::Coordinate coordinate;
+    string searchStringLowercase;
 };
 
 void to_json(ofJson& j, const Location& l);
@@ -108,6 +110,8 @@ public:
     float makeFakeLogsEverySecondsMin = 0;
     float makeFakeLogsEverySecondsMax = 0;
     double nextFakeLogSeconds = 0;
+    
+    ofEasyCam cam;
     
     
     // SERVER

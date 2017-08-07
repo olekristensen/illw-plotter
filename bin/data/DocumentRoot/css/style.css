@@ -75,3 +75,8 @@ body {
 .pac-container {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
+mark {
+  color:inherit;
+  background: #FFBE3199;
+}

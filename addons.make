@@ -13,3 +13,4 @@ ofxMediaType
 ofxNetworkUtils
 ofxHersheyFont
 ofxIconvCpp
+ofxSqliteCpp

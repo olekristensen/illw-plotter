@@ -34,6 +34,36 @@ void ofApp::setup(){
     
     loadLighthouses("wllw_lighthouses.xml");
     
+    // DATABASE
+    
+    std::string exampleDB = ofToDataPath("log.sqlite", true);
+        
+    try
+    {
+        // Open a database file in create/write mode.
+        db = new SQLite::Database(exampleDB, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+        
+        ofLogNotice("ofApp::setup()") << "SQLite database file '" << db->getFilename() << "' opened successfully";
+        
+        db->exec("CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY, source TEXT, destination TEXT, notes TEXT, timestamp TEXT, plotted TEXT)");
+        
+        // Check the results : expect two row of result
+        SQLite::Statement query(*db, "SELECT * FROM log");
+        
+        ofLogNotice("ofApp::setup()") << "SELECT * FROM log :";
+        
+        while (query.executeStep())
+        {
+            ofLogNotice("ofApp::setup()") << "row (" << query.getColumn(0) << ", \"" << query.getColumn(1) << "\")";
+        }
+        
+    }
+    catch (const std::exception& e)
+    {
+        ofLogError() << "SQLite exception: " << e.what();
+    }
+
+    
     // PLOTTER
     
     plotter.setup( "/dev/tty.usbserial-FT5CHURVB" );
@@ -98,6 +128,64 @@ void ofApp::update(){
         int locationNumber = ofRandom(0, locations.size()-1);
         addLogEntry(locations[locationNumber]);
         nextFakeLogSeconds = ofGetElapsedTimef() + ofRandom(makeFakeLogsEverySecondsMin,  makeFakeLogsEverySecondsMax);
+    }
+    
+    if(plotterLive) {
+
+        Poco::DateTimeFormatter fmt;
+
+        stringstream ss;
+        
+        ss << "SELECT * FROM log WHERE";
+        ss << " timestamp >= datetime('" + fmt.format(plotterLiveFromTimestamp, Poco::DateTimeFormat::ISO8601_FORMAT) + "')";
+        ss << " AND timestamp < datetime('" + fmt.format(plotterLiveToTimestamp, Poco::DateTimeFormat::ISO8601_FORMAT) + "')";
+        //ss << " AND plotted IS NOT NULL";
+        ss << " ORDER BY timestamp ASC LIMIT 1";
+        
+        ofLogNotice("ofApp::update()") << ss.str();
+        
+        try
+        {
+            
+            SQLite::Statement query(*db, ss.str());
+            
+            int id = -1;
+            
+            while (query.executeStep())
+            {
+                id = query.getColumn(0);
+                ofLogNotice("ofApp::update()") << query.getColumn(0);
+                LogEntry l;
+                from_query(query, l);
+                plotLogEntry(l);
+                break;
+            }
+            
+            if(id > 0){
+                
+                stringstream ssUpdate;
+                
+                Poco::DateTimeFormatter fmt;
+                
+                Poco::Timestamp t;
+                
+                ssUpdate << "UPDATE log SET plotted =";
+                ssUpdate << " datetime('" + fmt.format(t, Poco::DateTimeFormat::ISO8601_FORMAT) + "')";
+                ssUpdate << " WHERE id = " + ofToString(id);
+                
+                ofLogNotice() << ssUpdate.str() ;
+                
+                db->exec(ssUpdate.str());
+                
+                
+            }
+                
+            
+        }
+        catch (const std::exception& e)
+        {
+            ofLogError() << "SQLite exception: " << e.what();
+        }
     }
     
     plotter.update();
@@ -236,6 +324,15 @@ void ofApp::draw(){
             else
                 plotter.disableCapture();
         }
+        
+        if(ImGui::Checkbox("Live", &plotterLive)){
+            if(plotterLive){
+                Poco::DateTime timestamp;
+                plotterLiveFromTimestamp = ofxTime::Utils::floor(timestamp, Poco::Timespan::HOURS);
+                plotterLiveToTimestamp = plotterLiveFromTimestamp + ofxTime::Period::Hour();
+            }
+        }
+
         ImGui::Text("%i commands", plotter.getNumCommands());
         if(plotter.isPrinting()){
             ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth()-(43+ImGui::GetStyle().ItemInnerSpacing.x));
@@ -792,10 +889,11 @@ void from_json(const ofJson& j, Location& l) {
 void to_json(ofJson& j, const LogEntry& l) {
     Poco::DateTimeFormatter fmt;
     std::string timestamp = fmt.format(l.timestamp, Poco::DateTimeFormat::HTTP_FORMAT);
-    j = ofJson{{"source", l.source}, {"destination", l.destination}, {"notes", l.notes}, {"timestamp", timestamp }, {"distance", ofx::Geo::GeoUtils::distanceHaversine(l.source.coordinate, l.destination.coordinate) }, {"bearing", ofx::Geo::GeoUtils::bearingHaversine(l.source.coordinate, l.destination.coordinate)  } };
+    j = ofJson{{"number", l.number}, {"source", l.source}, {"destination", l.destination}, {"notes", l.notes}, {"timestamp", timestamp }, {"distance", ofx::Geo::GeoUtils::distanceHaversine(l.source.coordinate, l.destination.coordinate) }, {"bearing", ofx::Geo::GeoUtils::bearingHaversine(l.source.coordinate, l.destination.coordinate)  } };
 };
 
 void from_json(const ofJson& j, LogEntry& l) {
+    l.number = j.at("number").get<int>();
     l.source = j.at("source").get<Location>();
     l.destination = j.at("destination").get<Location>();
     l.notes = j.at("notes").get<std::string>();
@@ -804,6 +902,17 @@ void from_json(const ofJson& j, LogEntry& l) {
     l.timestamp = parser.parse(j.at("timestamp").get<std::string>(), tz);
 };
 
+void from_query(SQLite::Statement& q, LogEntry& l) {
+    //TODO: FIX THE AT PROBLEM BY MAKING A LOGENTRY DIRECTLY
+    ofJson j;
+    ofJson destination;
+    ofJson source;
+    
+    ofLogNotice("from_query:") << q.getColumn(0).getString() << " " << q.getColumn(1).getString() << " " << q.getColumn(2).getString() << " " << q.getColumn(3).getString() << " " << q.getColumn(4).getString();
+    j = ofJson{{"number", q.getColumn(0).getInt()}, {"source", q.getColumn(1).getString()}, {"destination", q.getColumn(2).getString()}, {"notes", q.getColumn(3).getString()}, {"timestamp", q.getColumn(4).getString() } };
+    
+    l = j;
+};
 
 void ofApp::rpc_addLogEntry(ofx::JSONRPC::MethodArgs& args)
 {
@@ -839,7 +948,35 @@ LogEntry ofApp::addLogEntry(const Location loc){
     l.destination = loc;
     ofx::HTTP::WebSocketFrame frame("refreshLog");
     server.webSocketRoute().broadcast(frame);
-    plotLogEntry(l);
+    
+    try
+    {
+
+        ofJson j = l;
+        
+        stringstream ss;
+
+        // (id INTEGER PRIMARY KEY, source TEXT, destination TEXT, notes TEXT, timestamp TEXT, plotted TEXT);
+
+        Poco::DateTimeFormatter fmt;
+        
+        ss << "INSERT INTO log (source, destination, timestamp) VALUES (";
+        ss << "'" << j.at("source").dump() << "',";
+        ss << "'" << j.at("destination").dump() + "',";
+        ss << + "datetime('" + fmt.format(l.timestamp, Poco::DateTimeFormat::ISO8601_FORMAT) + "'))";
+        
+        ofLogNotice() << ss.str() ;
+        
+        db->exec(ss.str());
+        
+    }
+    catch (const std::exception& e)
+    {
+        ofLogError() << "SQLite exception: " << e.what();
+    }
+    
+
+    
     log.push_back(l);
     return l;
 }

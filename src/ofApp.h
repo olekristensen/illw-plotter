@@ -9,7 +9,7 @@
 #include "ofxJSONRPC.h"
 #include "ofxHersheyFont.h"
 #include "ofxIconvCpp.h"
-#include "SQLiteCpp.h"
+#include "ofxSQLiteCpp.h"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
@@ -40,6 +40,7 @@ void to_json(ofJson& j, const LogEntry& l);
 
 void from_json(const ofJson& j, LogEntry& l);
 
+void from_query(SQLite::Statement& q, LogEntry& l);
 
 class ofApp : public ofBaseApp{
     
@@ -107,9 +108,13 @@ public:
     ofxImGui::Gui gui;
     int guiColumnWidth = 250;
     bool makeFakeLogs = false;
-    float makeFakeLogsEverySecondsMin = 0;
-    float makeFakeLogsEverySecondsMax = 0;
+    float makeFakeLogsEverySecondsMin = 10.0;
+    float makeFakeLogsEverySecondsMax = 200.0;
     double nextFakeLogSeconds = 0;
+    bool plotterLive = false;
+    
+    Poco::DateTime plotterLiveFromTimestamp;
+    Poco::DateTime plotterLiveToTimestamp;
     
     ofEasyCam cam;
     
@@ -132,6 +137,10 @@ public:
     // modified by multiple clients.  In our case, userText must be protected.
     // We mark the mutex as mutable so that it can be used in const functions.
     mutable std::mutex mutex;
+    
+    // DATABASE
+    
+    SQLite::Database * db;
     
     LogEntry addLogEntry(const Location loc);
 

@@ -88,7 +88,7 @@ function onWebSocketError () {
 function addLogEntry (location, v) {
   var $this = $(this)
   JSONRPCClient.call('addLogEntry',
-  selectedLocation,
+  location,
   function (result) {
     if (result != null) {
       successAlert('<strong>' + result.destination.illw + '</strong> ' + result.destination.name + ' has been logged.')
@@ -146,7 +146,7 @@ function refreshLog () {
           '<td>' + obj.destination.country + '</td>' +
           '<td>' + obj.destination.name + '</td>' +
           '</tr>')
-        updateCompassArrow(obj)
+          updateCompassArrow(obj)
       })
       $('#log >tbody tr.newRow').fadeIn(500, function () {
         $('#log >tbody tr.newRow').removeClass('newRow')
@@ -155,6 +155,8 @@ function refreshLog () {
         }, 1000)
       })
       formatLogTable()
+      d = new Date();
+      $('#plot').attr("src", "/img/latest-plot.svg?"+d.getTime());
       $('#log > tbody').scrollTop($('#log > tbody')[0].scrollHeight)
     }
   },
@@ -245,19 +247,36 @@ function formatLocationSelection (location) {
 
 function formatLogTable () {
     // Change the selector if needed
-  var $table = $('table#log'),
+    var $table = $('table#log'),
     $bodyCells = $table.find('tbody tr:first').children(),
     colWidth
-
+    
     // Get the tbody columns width array
-  colWidth = $bodyCells.map(function () {
-    return $(this).width()
-  }).get()
-
+    colWidth = $bodyCells.map(function () {
+                              return $(this).width()
+                              }).get()
+    
     // Set the width of thead columns
-  $table.find('thead tr').children().each(function (i, v) {
-    $(v).width(colWidth[i])
-  })
+    $table.find('thead tr').children().each(function (i, v) {
+                                            $(v).width(colWidth[i])
+                                            })
+}
+
+function formatFirebaseTable () {
+    // Change the selector if needed
+    var $table = $('table#firebase'),
+    $bodyCells = $table.find('tbody tr:first').children(),
+    colWidth
+    
+    // Get the tbody columns width array
+    colWidth = $bodyCells.map(function () {
+                              return $(this).width()
+                              }).get()
+    
+    // Set the width of thead columns
+    $table.find('thead tr').children().each(function (i, v) {
+                                            $(v).width(colWidth[i])
+                                            })
 }
 
 $(document).ready(function () {
@@ -322,7 +341,7 @@ $(document).ready(function () {
   $('#illw-search .location-search').on('select2:select', function (evt) {
     selectLocation(evt.params.data, $('#illw-search'), true)
   })
-
+                  
   $('#locatorField').on('keyup', function (evt) {
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Meta', 'Alt', 'Shift', 'Control'].includes(evt.key)) {
       var value = evt.target.value

@@ -103,6 +103,9 @@ public:
     float radius;
     float halfHeight;
     
+    bool savePdf = false;
+    bool saveSvg = false;
+    
     // GUI
     
     ofxImGui::Gui gui;

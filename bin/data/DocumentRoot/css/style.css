@@ -32,19 +32,22 @@ body {
   margin-bottom:2px;
 }
 
-#log {
+#log, #firebase {
   width:100%;
 }
 
-#log thead, #log tbody { display: block; width:100%;}
+#log thead, #log tbody, #firebase thead, #firebase tbody
+{ display: block; width:100%;}
 
-#log tbody {
+#log tbody, #firebase tbody
+{
     height: 200px;       /* Just for the demo          */
     overflow-y: auto;    /* Trigger vertical scroll    */
     overflow-x: hidden;  /* Hide the horizontal scroll */
 }
 
-#log tr, #log td {
+#log tr, #log td, #firebase tr, #firebase td
+{
   transition: background-color 3s;
 }
 
@@ -54,7 +57,7 @@ body {
 	right: 0px;
   width: 100px;
 	height: 100px;
-	z-index: 2030;
+	z-index: 0;
 }
 
 .compass .disc {
@@ -62,6 +65,7 @@ body {
 	width: 100%;
 	height: 100%;
 	background-size: 100%;
+    z-index: 1;
 }
 
 .compass .disc .arrow {
@@ -70,6 +74,7 @@ body {
 	height: 100%;
 	background-size: 100%;
   transition: transform 1s;
+  z-index: 2;
 }
 
 .pac-container {

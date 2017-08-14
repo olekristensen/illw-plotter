@@ -3,9 +3,8 @@
 
 //TODO:
 /*
- 2. accept location in gridloc, lighthouses and islands etc.
- 3. make persistent list ofxSqlite of all entries and mark if they are drawn
- 4. make websocket clients reconnect...
+ 
+ make websocket clients reconnect...
  
  */
 
@@ -43,18 +42,20 @@ void ofApp::setup(){
         // Open a database file in create/write mode.
         db = new SQLite::Database(exampleDB, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
         
-        ofLogNotice("ofApp::setup()") << "SQLite database file '" << db->getFilename() << "' opened successfully";
+        ofLogVerbose("ofApp::setup()") << "SQLite database file '" << db->getFilename() << "' opened successfully";
         
         db->exec("CREATE TABLE IF NOT EXISTS log (id INTEGER PRIMARY KEY, source TEXT, destination TEXT, notes TEXT, timestamp TEXT, plotted TEXT)");
         
         // Check the results : expect two row of result
         SQLite::Statement query(*db, "SELECT * FROM log");
         
-        ofLogNotice("ofApp::setup()") << "SELECT * FROM log :";
+        ofLogVerbose("ofApp::setup()") << "SELECT * FROM log :";
         
         while (query.executeStep())
         {
-            ofLogNotice("ofApp::setup()") << "row (" << query.getColumn(0) << ", \"" << query.getColumn(1) << "\")";
+            LogEntry l;
+            from_query(query, l);
+            log.push_back(l);
         }
         
     }
@@ -132,6 +133,7 @@ void ofApp::update(){
     
     if(plotterLive) {
 
+        Poco::DateTime now;
         Poco::DateTimeFormatter fmt;
 
         stringstream ss;
@@ -139,10 +141,10 @@ void ofApp::update(){
         ss << "SELECT * FROM log WHERE";
         ss << " timestamp >= datetime('" + fmt.format(plotterLiveFromTimestamp, Poco::DateTimeFormat::ISO8601_FORMAT) + "')";
         ss << " AND timestamp < datetime('" + fmt.format(plotterLiveToTimestamp, Poco::DateTimeFormat::ISO8601_FORMAT) + "')";
-        //ss << " AND plotted IS NOT NULL";
+        ss << " AND (plotted IS NULL OR plotted = '')";
         ss << " ORDER BY timestamp ASC LIMIT 1";
         
-        ofLogNotice("ofApp::update()") << ss.str();
+        ofLogVerbose("ofApp::update()") << ss.str();
         
         try
         {
@@ -173,7 +175,7 @@ void ofApp::update(){
                 ssUpdate << " datetime('" + fmt.format(t, Poco::DateTimeFormat::ISO8601_FORMAT) + "')";
                 ssUpdate << " WHERE id = " + ofToString(id);
                 
-                ofLogNotice() << ssUpdate.str() ;
+                ofLogVerbose("ofApp::update()") << ssUpdate.str() ;
                 
                 db->exec(ssUpdate.str());
                 
@@ -186,6 +188,12 @@ void ofApp::update(){
         {
             ofLogError() << "SQLite exception: " << e.what();
         }
+        
+        if(now > plotterLiveToTimestamp){
+            savePdf = true;
+            plotterLive = false;
+        }
+        
     }
     
     plotter.update();
@@ -195,24 +203,65 @@ void ofApp::draw(){
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     ofBackground(233, 255);
     // page
+    float scaleView = (ofGetWidth()-guiColumnWidth)*1.0/ofGetWidth();
+
+    ofRectangle page(0,0,plotter.getInputWidth(), plotter.getInputHeight());
+    page.scaleTo(ofRectangle( 0, 0, ofGetWidth(), ofGetHeight() ));
+    ofRectangle pageAtZero(page);
+    pageAtZero.translate(-page.x, -page.y);
+    
+    if(saveSvg){
+        ofPushMatrix();
+        ofBeginSaveScreenAsSVG("DocumentRoot/img/latest-plot.svg", false, false, pageAtZero);
+        ofSetLineWidth(0.1);
+        ofTranslate(-page.x, -page.y);
+        ofBackground(255,255);
+        ofFill();
+        plotter.pushMatrix();
+            ofDrawRectangle(0,0, plotter.getInputWidth(), plotter.getInputHeight());
+        plotter.popMatrix();
+        ofNoFill();
+        plotter.draw();
+        ofEndSaveScreenAsSVG();
+        saveSvg = false;
+        ofPopMatrix();
+    }
+
+    ofBackground(233, 255);
     ofFill();
     ofSetColor(255,255);
-    ofPushView();
-    float scaleView = (ofGetWidth()-guiColumnWidth)*1.0/ofGetWidth();
-    ofTranslate(guiColumnWidth, ofGetHeight()/2.0);
-    ofScale(scaleView, scaleView);
-    ofTranslate(0, -ofGetHeight()/2.0);
-    plotter.pushMatrix();
-    ofDrawRectangle(0,0, plotter.getInputWidth(), plotter.getInputHeight());
-    //ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
-    plotter.popMatrix();
-    
-    // plotter
-    ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
-    ofNoFill();
-    plotter.draw();
-    path.draw();
-    ofPopView();
+
+    if(savePdf){
+        // got to draw with an origin at 0,0, so the page stuff does that.
+        ofPushMatrix();
+        ofBeginSaveScreenAsPDF("screenshot-"+ofGetTimestampString()+".pdf", false, false, pageAtZero);
+        ofBackground(255,255);
+        ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
+        ofNoFill();
+        ofSetLineWidth(0.1);
+        ofTranslate(-page.x, -page.y);
+        plotter.draw();
+        ofEndSaveScreenAsPDF();
+            savePdf = false;
+        ofPopMatrix();
+    } else {
+        ofPushView();
+        ofTranslate(guiColumnWidth, ofGetHeight()/2.0);
+        ofScale(scaleView, scaleView);
+        ofTranslate(0, -ofGetHeight()/2.0);
+        plotter.pushMatrix();
+        
+        ofDrawRectangle(0,0, plotter.getInputWidth(), plotter.getInputHeight());
+        //ofDrawEllipse(plotter.getInputPosFromPrinter(plotter.getPenPosition()), 10, 10);
+        plotter.popMatrix();
+        
+        // plotter
+        ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
+        ofNoFill();
+        plotter.draw();
+        path.draw();
+        ofPopView();
+    }
     
     // GUI
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
@@ -332,7 +381,11 @@ void ofApp::draw(){
                 plotterLiveToTimestamp = plotterLiveFromTimestamp + ofxTime::Period::Hour();
             }
         }
-
+        if(plotterLive){
+            ImGui::SameLine();
+            Poco::LocalDateTime time = plotterLiveFromTimestamp;
+            ImGui::Text("from %s", ofxTime::Utils::format(time, "%H:%M").c_str());
+        }
         ImGui::Text("%i commands", plotter.getNumCommands());
         if(plotter.isPrinting()){
             ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth()-(43+ImGui::GetStyle().ItemInnerSpacing.x));
@@ -348,6 +401,11 @@ void ofApp::draw(){
             if (ImGui::Button("Clear"))
             {
                 plotter.clear();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("PDF"))
+            {
+                savePdf = true;
             }
             ImGui::SameLine();
             if (ImGui::Button("Print"))
@@ -488,35 +546,48 @@ void ofApp::keyReleased(int key){
 }
 
 void ofApp::plotPageBeginning(){
-    // north compass
+    
     float r = margin/3.0;
     float c = r/7.0;
     float x = plotter.getInputWidth()-margin;
     float y = halfHeight;
+    float step = c / 7;
+    
+    // compass
     plotter.setPen(2);
     plotter.circle(x, y, r);
     plotter.line(x, y-c, x+r, y);
     plotter.line(x, y+c, x+r, y);
     plotter.setPen(1);
-    for(float i = r/10.0; i > 0; i-=0.4){
+    for(float i = c; i > 0; i-=step){
         plotter.circle(x,y,i);
     }
-    for(float i = c; i > 0; i-=0.4){
+    plotter.line(x, y, x-r, y);
+    for(float i = c; i > 0; i-=step){
         plotter.line(x, y-i, x-r, y);
         plotter.line(x, y+i, x-r, y);
     }
     
     plotText("N", ofPoint(x-r*1.2,y), 7, -90, CENTER);
     
+    // signature
+    
     plotter.setPen(2);
     plotText("ole kristensen", ofPoint(x+r*1.5,y), 2.5, -90, CENTER);
-    plotText("2017", ofPoint(4+x+r*1.5,y), 2.5, -90, CENTER);
+    plotText("HAMMEREN FYR, BORNHOLM, 2017", ofPoint(4+x+r*1.5,y), 2, -90, CENTER);
     
+    // timestamp
+    plotter.setPen(3);
+    Poco::LocalDateTime timestamp;
+    Poco::LocalDateTime thisHourBegan = ofxTime::Utils::floor(timestamp, Poco::Timespan::HOURS);
+    Poco::LocalDateTime thisHourEnds = thisHourBegan + ofxTime::Period::Hour();
+    plotText(ofxTime::Utils::format(thisHourBegan,"%H:%M"), startPoint+ofPoint(10,0), 10, 180, RIGHT, MIDDLE);
+    plotter.line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+    plotText(ofxTime::Utils::format(thisHourEnds,"%H:%M"), endPoint-ofPoint(10,0), 10, 180, LEFT, MIDDLE);
+
 }
 
 void ofApp::plotLogEntry(LogEntry e){
-    
-    //TODO: Finish this an d remember to think about a sphere and do the haversine dst/angle before applying vector math
     
     bool outgoing = false;
     
@@ -564,15 +635,20 @@ void ofApp::plotLogEntry(LogEntry e){
     plotter.setPen(1);
     
     if(outgoing){
+        plotter.circle(lighthousePointOnPaper.x, lighthousePointOnPaper.y, 0.5);
         plotter.line(lighthousePointOnPaper.x, lighthousePointOnPaper.y, outsidePointOnPaper.x, outsidePointOnPaper.y);
+        plotter.circle(outsidePointOnPaper.x, outsidePointOnPaper.y, 0.5);
     } else {
+        plotter.circle(outsidePointOnPaper.x, outsidePointOnPaper.y, 0.5);
         plotter.line(outsidePointOnPaper.x, outsidePointOnPaper.y, lighthousePointOnPaper.x, lighthousePointOnPaper.y);
+        plotter.circle(lighthousePointOnPaper.x, lighthousePointOnPaper.y, 0.5);
     }
     
-    plotter.setPen(4);
     
+    /*
+    plotter.setPen(3);
     plotter.circle(lighthousePointOnPaper.x, lighthousePointOnPaper.y, distanceOnPaper);
-    
+    */
     
     // PLOT TEXT
     
@@ -593,7 +669,9 @@ void ofApp::plotLogEntry(LogEntry e){
     
     plotter.setPen(2);
     
-    plotText(translitterated, outsidePoint.getScaled(outsidePoint.length()+3) + lighthousePointOnPaper, 2.5, fmodf(180+geoBearing, 360), TextAlignment::LEFT, TextVerticalAlignment::MIDDLE);
+    plotText(translitterated, outsidePoint.getScaled(outsidePoint.length()+3) + lighthousePointOnPaper, 2, fmodf(180+geoBearing, 360), TextAlignment::LEFT, TextVerticalAlignment::MIDDLE);
+    
+    saveSvg = true;
     
 }
 
@@ -826,11 +904,13 @@ vector<Location> ofApp::search(const std::string& term)
     
     vector<Location> matches;
     
-    vector<boost::algorithm::boyer_moore<std::string::const_iterator>> searches;
+    /*
+     map<std::string, boost::algorithm::boyer_moore<std::string::const_iterator> > searches;
     
     for(const std::string n : needles){
-        searches.push_back( boost::algorithm::boyer_moore<std::string::const_iterator> ( n.begin (), n.end ()) );
+        searches.insert(make_pair(n, boost::algorithm::make_boyer_moore ( n ) ));
     }
+     */
     
     for(const auto l : locations){
         
@@ -840,13 +920,13 @@ vector<Location> ofApp::search(const std::string& term)
         
         int foundTerms = 0;
         bool foundIllw = false;
-        int nIt = 0;
         
         for(const std::string n : needles){
             
+            //boost::algorithm::boyer_moore<std::string::const_iterator> s = searches.at(n);
+        
             // search all fields
-            
-//            if(searches.at(nIt++)( haystack.begin(), haystack.end()) != std::make_pair(haystack.end (), haystack.end ())){
+//            if(s(haystack.begin(), haystack.end()) != std::make_pair(haystack.end (), haystack.end ())){
             if(boost::algorithm::boyer_moore_search( haystack.begin(), haystack.end(), n.begin(), n.end()) != std::make_pair(haystack.end (), haystack.end ())){
                 foundTerms++;
             } else {
@@ -903,15 +983,21 @@ void from_json(const ofJson& j, LogEntry& l) {
 };
 
 void from_query(SQLite::Statement& q, LogEntry& l) {
-    //TODO: FIX THE AT PROBLEM BY MAKING A LOGENTRY DIRECTLY
-    ofJson j;
-    ofJson destination;
-    ofJson source;
     
-    ofLogNotice("from_query:") << q.getColumn(0).getString() << " " << q.getColumn(1).getString() << " " << q.getColumn(2).getString() << " " << q.getColumn(3).getString() << " " << q.getColumn(4).getString();
-    j = ofJson{{"number", q.getColumn(0).getInt()}, {"source", q.getColumn(1).getString()}, {"destination", q.getColumn(2).getString()}, {"notes", q.getColumn(3).getString()}, {"timestamp", q.getColumn(4).getString() } };
+    ofLogVerbose("from_query:") << q.getColumn(0).getString() << " " << q.getColumn(1).getString() << " " << q.getColumn(2).getString() << " " << q.getColumn(3).getString() << " " << q.getColumn(4).getString();
+
+    ofJson sourceJson = ofJson::parse(q.getColumn(1).getString());
+    ofJson destinationJson = ofJson::parse(q.getColumn(2).getString());
+
+    l.number = q.getColumn(0).getInt();
+    l.source = sourceJson.get<Location>();
+    l.destination = destinationJson.get<Location>();
+    l.notes = q.getColumn(3).getString();
     
-    l = j;
+    Poco::DateTimeParser parser;
+    int tz;
+    l.timestamp = parser.parse(q.getColumn(4).getString(), tz);
+    
 };
 
 void ofApp::rpc_addLogEntry(ofx::JSONRPC::MethodArgs& args)
@@ -965,14 +1051,14 @@ LogEntry ofApp::addLogEntry(const Location loc){
         ss << "'" << j.at("destination").dump() + "',";
         ss << + "datetime('" + fmt.format(l.timestamp, Poco::DateTimeFormat::ISO8601_FORMAT) + "'))";
         
-        ofLogNotice() << ss.str() ;
+        ofLogVerbose("addLogEntry:") << ss.str() ;
         
         db->exec(ss.str());
         
     }
     catch (const std::exception& e)
     {
-        ofLogError() << "SQLite exception: " << e.what();
+        ofLogError("addLogEntry:") << "SQLite exception: " << e.what();
     }
     
 

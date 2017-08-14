@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <!-- Force latest IE rendering engine or ChromeFrame if installed -->
+        <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+        <meta charset="utf-8"/>
+        <title>ILLW Plotter</title>
+        <meta name="description" content=""/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, , user-scalable=no"/>
+        <link rel="shortcut icon" href="img/favicon.ico"/>
+        <!-- Bootstrap styles -->
+        <link rel="stylesheet" href="css/bootstrap.min.css"/>
+        <!-- Select2 -->
+        <link rel="stylesheet" href="css/select2.min.css"/>
+        <!-- Generic page styles -->
+        <link rel="stylesheet" href="css/style.css"/>
+        
+        <style>
+            .compass {
+                width: 120px;
+                height: 120px;
+            }
+        </style>
+        
+    </head>
+    <body>
+        
+        
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#"><strong>ILLW</strong> plotter</a>
+                </div>
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="/">Logger</a></li>
+                        <li><a href="/compass.html">Compass</a></li>
+                        <li><a href="/plot.html">Plot</a></li>
+                    </ul>
+                    <p class="navbar-text navbar-right">by <a href="http://ole.kristensen.name" class="navbar-link">ole kristensen</a></p>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        
+        <div class="container">
+
+            <div class="alert" id="alert">
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong>Success! </strong>
+            </div>
+            
+            <div class="panel panel-default" id="illw-search">
+                <div class="panel-body">
+                    <div class="pull-left">
+                        <strong>Search ILLW lighthouse</strong>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <select class="location-search" style="width: 100%">
+                            <option></option>
+                        </select>
+                        <span class="input-group-btn">
+                            <button id="illw-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
+                        </span>
+                    </div>
+                    <div class="panel panel-default location-selection-container">
+                        <div class="panel-body location-selection">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel panel-default" id="locator-search">
+                <div class="panel-body">
+                    <div class="pull-left">
+                        <strong>Grid Locator</strong>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="locatorField" style="width: 100%" class="form-control"  placeholder="Input Maidenhead Grid Locator"/>
+                        <span class="input-group-btn">
+                            <button id="locator-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
+                        </span>
+                    </div>
+                    <span id="locatorHelpBlock" class="help-block"></span>
+                    <div class="panel panel-default location-selection-container">
+                        <div class="panel-body location-selection">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel panel-default" id="google-search">
+                <div class="panel-body">
+                    <div class="pull-left">
+                        <strong>Google a Place</strong>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <div id="locationField" style="width: 100%">
+                            <input id="autocomplete" style="width: 100%"  class="form-control" language="en" placeholder="Enter an address or place"
+                                type="text"></input>
+                        </div>
+                        <span class="input-group-btn">
+                            <button id="google-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
+                        </span>
+                    </div>
+                    <div class="panel panel-default location-selection-container">
+                        <div class="panel-body location-selection">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--<div class="compass pull-right" id="compassDisc">
+                <div class="disc" id="compassDiscImg">
+                    <div class="arrow" id="compassDiscArrow"></div>
+                </div>
+            </div>
+            -->
+            <br><br><br>
+            
+            <div class="panel panel-default">
+                <button id="refresh-log" class="btn btn-default btn-xs pull-right" style="margin-top:14px;margin-bottom:0px;margin-right:15px;" type="button">Refresh</button>
+                <div class="panel-body">
+                    <div class="pull-left">
+                        <strong>Log</strong>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <!-- Table -->
+                    <table class="table table-condensed" id="log">
+                        <thead><tr><th>Timestamp</th><th>Bearing</th><th>Distance</th><th>ILLW</th><th>Country</th><th>Name</th></tr></thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            
+            
+        </div>
+        
+        <script src="./js/jquery.min.js"></script>
+        <script src="./js/bootstrap.min.js"></script>
+        <script src="./js/jquery.jsonrpcclient.js"></script>
+        <script src="./js/jquery.json.js"></script>
+        <script src="./js/select2.min.js"></script>
+        <script src="./js/prism.js"></script>
+        <script src="./js/ofxUtils.js"></script>
+        <script src="./js/HamGridSquare.js"></script>
+        <script src="./js/main.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8&libraries=places&callback=initAutocomplete&language=en"></script>
+    </body>
+</html>

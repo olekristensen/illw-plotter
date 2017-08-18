@@ -1,348 +1,139 @@
 <!DOCTYPE HTML>
 <html lang="en">
-    <head>
-        <!-- Force latest IE rendering engine or ChromeFrame if installed -->
-        <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
-        <meta charset="utf-8"/>
-        <title>ILLW Plotter</title>
-        <meta name="description" content=""/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, , user-scalable=no"/>
-        <link rel="shortcut icon" href="img/favicon.ico"/>
-        <!-- Bootstrap styles -->
-        <link rel="stylesheet" href="css/bootstrap.min.css"/>
-        <!-- Select2 -->
-        <link rel="stylesheet" href="css/select2.min.css"/>
-        <!-- Generic page styles -->
-        <link rel="stylesheet" href="css/style.css"/>
-        
-    </head>
-    <body>
-        
-        
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="container">
-                <!-- Brand and toggle get grouped for better mobile display -->
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="#"><strong>ILLW</strong> plotter</a>
-                </div>
-                <!-- Collect the nav links, forms, and other content for toggling -->
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav">
-                        <li><a href="/compass.html">Compass</a></li>
-                        <li><a href="/plot.html">Plot</a></li>
-                    </ul>
-                    <p class="navbar-text navbar-right">by <a href="http://ole.kristensen.name" class="navbar-link">ole kristensen</a></p>
-                </div><!-- /.navbar-collapse -->
-            </div><!-- /.container-fluid -->
-        </nav>
-        
-        <div class="container">
-            
-            <h1>ILLW <small>log</small></h1>
-            
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <div class="pull-left">
-                        <strong>Firebase</strong>
-                    </div>
-                </div>
-                <div class="panel-footer">
-                    <!-- Table -->
-                    <table class="table table-condensed" id="firebase">
-                        <thead><tr><th>Key</th><th>Call</th><th>Locator</th><th>Adif</th></tr></thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+<head>
+  <!-- Force latest IE rendering engine or ChromeFrame if installed -->
+  <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+  <meta charset="utf-8"/>
+  <title>ILLW Plotter</title>
+  <meta name="description" content=""/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, , user-scalable=no"/>
+  <link rel="shortcut icon" href="img/favicon.ico"/>
+  <!-- Bootstrap styles -->
+  <link rel="stylesheet" href="css/bootstrap.min.css"/>
+  <!-- Select2 -->
+  <link rel="stylesheet" href="css/select2.min.css"/>
+  <!-- Generic page styles -->
+  <link rel="stylesheet" href="css/style.css"/>
 
-<div class="panel panel-default" id="locator-search">
-    <div class="panel-body">
-        <div class="pull-left">
-            <strong>Grid Locator</strong>
-        </div>
+</head>
+<body>
+
+
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><strong>ILLW</strong> plotter</a>
+      </div>
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li><a href="/compass.html">Compass</a></li>
+          <li><a href="/plot.html">Plot</a></li>
+        </ul>
+        <p class="navbar-text navbar-right">by <a href="http://ole.kristensen.name" class="navbar-link">ole kristensen</a></p>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
+  <div class="container">
+
+    <div class="alert" id="alert">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Success! </strong>
     </div>
-    <div class="panel-footer">
+
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="pull-left">
+          <strong>Firebase</strong>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <!-- Table -->
+        <table class="table table-condensed" id="firebase">
+          <thead><tr><th> </th><th>Call</th><th>dxcc</th><th>Locator</th><th>Data</th></tr></thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel panel-default" id="qrz-bio">
+      <div class="panel-body">
+        <div class="pull-left">
+          <strong>QRZ bio</strong>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <div class="panel panel-default location-selection-container">
+          <div class="panel-body location-selection">
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="panel panel-default" id="locator-search" style="display:none">
+      <div class="panel-body">
+        <div class="pull-left">
+          <strong>Grid Locator</strong>
+        </div>
+      </div>
+      <div class="panel-footer">
         <div class="input-group">
-            <input id="locatorField" style="width: 100%" class="form-control"  placeholder="Input Maidenhead Grid Locator"/>
-            <span class="input-group-btn">
-                <button id="locator-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
-            </span>
+          <input id="locatorField" style="width: 100%" class="form-control"  placeholder="Input Maidenhead Grid Locator"/>
+          <span class="input-group-btn">
+            <button id="locator-add-log-entry" class="btn btn-default btn-add-log-entry" type="button">Add log entry</button>
+          </span>
         </div>
         <span id="locatorHelpBlock" class="help-block"></span>
         <div class="panel panel-default location-selection-container">
-            <div class="panel-body location-selection">
-            </div>
+          <div class="panel-body location-selection">
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-            <div class="panel panel-default">
-                <button id="refresh-log" class="btn btn-default btn-xs pull-right" style="margin-top:14px;margin-bottom:0px;margin-right:15px;" type="button">Refresh</button>
-                <div class="panel-body">
-                    <div class="pull-left">
-                        <strong>Log</strong>
-                    </div>
-                </div>
-                <div class="panel-footer">
-                    <!-- Table -->
-                    <table class="table table-condensed" id="log">
-                        <thead><tr><th>Timestamp</th><th>Bearing</th><th>Distance</th><th>Call</th><th>Country</th><th>Name</th></tr></thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
+    <div class="panel panel-default">
+      <button id="refresh-log" class="btn btn-default btn-xs pull-right" style="margin-top:14px;margin-bottom:0px;margin-right:15px;" type="button">Refresh</button>
+      <div class="panel-body">
+        <div class="pull-left">
+          <strong>Log</strong>
         </div>
+      </div>
+      <div class="panel-footer">
+        <!-- Table -->
+        <table class="table table-condensed" id="log">
+          <thead><tr><th>Timestamp</th><th>Bearing</th><th>Distance</th><th>Call</th><th>Country</th><th>Name</th></tr></thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-        <script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
-        <script src="./js/jquery.min.js"></script>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
+  <script src="./js/jquery.min.js"></script>
 
 
-        <script src="./js/bootstrap.min.js"></script>
-        <script src="./js/jquery.jsonrpcclient.js"></script>
-        <script src="./js/jquery.json.js"></script>
-        <script src="./js/select2.min.js"></script>
-        <script src="./js/prism.js"></script>
-        <script src="./js/ofxUtils.js"></script>
-        <script src="./js/HamGridSquare.js"></script>
-        <script src="./js/main.js"></script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8&libraries=places&callback=initAutocomplete&language=en"></script>
-        <script>
-            
-            // Initialize Firebase
-            var config = {
-                apiKey: "AIzaSyDFvU7lkuciYy5z4FHoNii_z93PBqEuSIA",
-                authDomain: "illw-b0c15.firebaseapp.com",
-                databaseURL: "https://illw-b0c15.firebaseio.com",
-                projectId: "illw-b0c15",
-                storageBucket: "illw-b0c15.appspot.com",
-                messagingSenderId: "395178732063"
-            };
-        firebase.initializeApp(config);
-        
-        var markLogged = function( key, object ){
-        
-            if(!object.logged){
-                object[ 'logged' ] = true;
-                firebase.database().ref('log/' + key).set(object);
-            }
-        
-        }
-        
-        var parseLine = function( line ){
-            var record = {};
-            var fields = line.split('<');
-            
-            record[ 'adif'] = line
-            
-            for( var i=0; i<fields.length; i++ ){
-                var field = fields[i],
-                fieldName = field.split(':')[0],
-                fieldValue = field.split('>')[1];
-                
-                if( fieldName.length && fieldName != 'EOR>' && fieldValue && fieldValue.length){
-                    fieldName = fieldName.trim().toLowerCase();
-                    fieldValue = fieldValue.trim();
-                    record[ fieldName ] = fieldValue;
-                }
-                
-            }
-            if( record.qso_date ){
-                var qso_date = new Date( Date.UTC( record.qso_date.slice(0,4),
-                                                  (record.qso_date.slice(4,6) - 1),
-                                                  record.qso_date.slice(6,8),
-                                                  record.time_on.slice(0,2),
-                                                  record.time_on.slice(2,4),
-                                                  record.time_on.slice(4)) );
-                                                  record.qso_date = qso_date;
-                                                  delete record[ 'time_on' ]
-                                                  delete record[ 'time_off' ]
-            }
-            return record
-        }
-        
-        var commentsRef = firebase.database().ref('log');
-        commentsRef.on('child_added', function(data) {
-                       
-                       var dataObj = data.val()
-                       if(!dataObj.call){
-                       dataObj = parseLine(dataObj.adif);
-                       firebase.database().ref('log/' + data.key).set(dataObj);
-                       }
-                       
-                       if(dataObj.gridsquare && !dataObj.logged){
-                       var value = dataObj.gridsquare
-                       var c = {lat: 0, lon: 0}
-                       // make sure the capitalisation and numbering scheme is consistent
-                       var filteredValue = ''
-                       for (var i = 0; i < value.length; i++) {
-                       if (i >= 0 && i < 2) {
-                       filteredValue += value.charAt(i).toUpperCase()
-                       } else if (i < 4) {
-                       /*            if (!isNaN(value.charAt(i))) {
-                        filteredValue += parseInt(value.charAt(i))
-                        }
-                        */
-                       filteredValue += value.charAt(i)
-                       } else if (i < 6) {
-                       filteredValue += value.charAt(i).toLowerCase()
-                       } else {
-                       filteredValue += value.charAt(i)
-                       }
-                       }
-                       if(value != filteredValue){
-                       value = filteredValue
-                       }
-                       $('#locatorField').val(value)
-                       
-                       // try converting to decimal coordinates
-                       try {
-                       c = HamGridSquare.toLatLon(value, c)
-                       
-                       // find the size of the grid square
-                       
-                       var level = Math.floor(value.length / 2.0)
-                       var size
-                       
-                       if (level == 1) {
-                       size = {lat: 10, lon: 20}
-                       } else if (level == 2) {
-                       size = {lat: 1, lon: 2}
-                       } else if (level == 3) {
-                       size = {lat: (1.0 / 60.0) * 2.5, lon: (1.0 / 60.0) * 5}
-                       }
-                       
-                       // try retrieving a name from google's reverse geocoding
-                       
-                       var geocoder = new google.maps.Geocoder()
-                       
-                       geocoder.geocode({'location': {'lat': c.lat, 'lng': c.lon}}, function (results, status) {
-                                        var name = value
-                                        var country = ''
-                                        var dxcc = ''
-                                        
-                                        if (status === 'OK') {
-                                        if (results[1]) {
-                                        var divisor = 2 * level
-                                        
-                                        // search for a geometry that contains our reduced square
-                                        
-                                        var matches = 0
-                                        
-                                        for (var i = 0; i < results.length; i++) {
-                                        var r = results[i]
-                                        if ((i == results.length - 1) || (r.geometry.viewport.contains({'lat': (c.lat - (size.lat / divisor)), 'lng': (c.lon - (size.lon / divisor))}) && r.geometry.viewport.contains({'lat': (c.lat + (size.lat / divisor)), 'lng': (c.lon + (size.lon / divisor))}))) {
-                                        for (var j = 0; j < r.address_components.length; j++) {
-                                        var addressType = r.address_components[j].types[0]
-                                        if (addressType == 'country') {
-                                        dxcc = r.address_components[j].short_name
-                                        country = r.address_components[j].long_name
-                                        if ((i == results.length - 1) && matches == 0 && j == 0) {
-                                        name = name + ', ' + r.address_components[j].long_name
-                                        }
-                                        } else {
-                                        matches++
-                                        name = name + ', ' + r.address_components[j].long_name
-                                        }
-                                        break
-                                        }
-                                        }
-                                        }
-
-                                        var newLocation =
-                                        {'illw': dataObj.call,
-                                        'name': name,
-                                        'country': country,
-                                        'dxcc': dataObj.dxcc,
-                                        'continent': '',
-                                        'coordinate': c
-                                        }
-                                        addLogEntry(newLocation,$('#locator-search .btn-add-log-entry'))
-                                        markLogged(data.key, dataObj)
-                                        } else {
-                                        // empty results from google
-                                        var newLocation =
-                                        {'illw': dataObj.call,
-                                        'name': name,
-                                        'country': country,
-                                        'dxcc': dataObj.dxcc,
-                                        'continent': '',
-                                        'coordinate': c
-                                        }
-                                        addLogEntry(newLocation,$('#locator-search .btn-add-log-entry'))
-                                        markLogged(data.key, dataObj)
-                                        }
-                                        } else {
-                                        // geocoding failed getting results from google, lets look for oceans
-                                        $.ajax({
-                                               type: 'GET',
-                                               url: 'http://api.geonames.org/extendedFindNearby?lat=' + c.lat + '&lng=' + c.lon + '&username=olekristensen',
-                                               cache: true,
-                                               dataType: 'xml',
-                                               success: function (xml) {
-                                               console.log(xml)
-                                               $(xml).find('geonames').each(function () {
-                                                                            $(this).find('ocean').each(function () {
-                                                                                                       var name = $(this).find('name').text()
-                                                                                                       var newLocation =
-                                                                                                       {'illw': dataObj.call,
-                                                                                                       'name': value + ', ' + name,
-                                                                                                       'country': '',
-                                                                                                       'dxcc': dataObj.dxcc,
-                                                                                                       'continent': '',
-                                                                                                       'coordinate': c
-                                                                                                       }
-                                                                                                       addLogEntry(newLocation,$('#locator-search .btn-add-log-entry'))
-                                                                                                       markLogged(data.key, dataObj)
-                                                                                                       })
-                                                                            })
-                                               },
-                                               error: function (e) {
-                                               var newLocation =
-                                               {'illw': dataObj.call,
-                                               'name': value,
-                                               'country': '',
-                                               'dxcc': dataObj.dxcc,
-                                               'continent': '',
-                                               'coordinate': c
-                                               }
-                                               addLogEntry(newLocation,$('#locator-search .btn-add-log-entry'))
-                                               markLogged(data.key, dataObj)
-                                               }
-                                               })
-                                        }
-                                        })
-                       } catch (e) {
-                       // grid locator failed
-                       alert("failed to locate")
-                       }
-                       }
-                       
-                       
-                       var $newRows = $('#firebase >tbody:last-child').append(
-                                                                              '<tr style="display:none;" class="newRow' + ' success' + '">' +
-                                                                              '<td nowrap><small>' + data.key + '</small></td>' +
-                                                                              '<td>' + dataObj.call + '</td>' +
-                                                                              '<td>' + dataObj.gridsquare + '</td>' +
-                                                                              '<td>' + dataObj.adif + '</td>' +
-                                                                              '</tr>')
-                       $('#firebase >tbody tr.newRow').fadeIn(500, function () {
-                                                              $('#firebase >tbody tr.newRow').removeClass('newRow')
-                                                              setTimeout(function () {
-                                                                         $('#firebase >tbody tr.success').removeClass('success')
-                                                                         }, 1000)
-                                                              })
-                       $('#firebase > tbody').scrollTop($('#log > tbody')[0].scrollHeight)
-                       formatFirebaseTable();
-                       });
-            </script>
-    </body>
-</html>
+  <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/jquery.jsonrpcclient.js"></script>
+  <script src="./js/jquery.json.js"></script>
+  <script src="./js/select2.min.js"></script>
+  <script src="./js/prism.js"></script>
+  <script src="./js/ofxUtils.js"></script>
+  <script src="./js/HamGridSquare.js"></script>
+  <script src="./js/main.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7GFqO4gfF7J9ycptEaCNLLGU6i3TnaQ8&libraries=places&callback=initAutocomplete&language=en"></script>
+  <script src="./js/firebase.js"></script>
+               </script>
+             </body>
+             </html>

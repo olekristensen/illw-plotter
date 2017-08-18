@@ -1,0 +1,113 @@
+{
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : 9223372036854775807,
+    "CA29DB320F881B85D76220FC5498A4D1FA4F037C" : 9223372036854775807,
+    "6DFDEEAED5C97364A7A859C0B354E13F95C94005" : 9223372036854775807,
+    "CC64F4963C935629E4EEDB8221C0DA9B68D2313F" : 9223372036854775807,
+    "4401B78D6A43C47BEBBD941DAE88FAC3E6BE9980" : 9223372036854775807,
+    "6DBA07F83F7AF99DB5F116332E6446603283BF4C" : 9223372036854775807,
+    "A82C0ABFD7ACBB96A8DACF462A005A3A654155C7" : 9223372036854775807,
+    "3CF3B4471C84DF2543AAA0AEAE2EC9F5FB1BB5AC" : 9223372036854775807,
+    "2DE9C8846D9375EAACFABA8963120E8E7719BAF5" : 9223372036854775807,
+    "E79AC8F85D79EF0945F6D75FEF552EFB26F49E2C" : 9223372036854775807,
+    "A4B2B4422B32074CDD7FABA8BC493A66417E3647" : 9223372036854775807,
+    "6D6FDB373C9A9EB614FB047E30EC71CD5377F13C" : 9223372036854775807,
+    "7ED0D15754D9EE08B829B967643A20055B98F6F4" : 9223372036854775807,
+    "C08088D16AA20160C2DFA22579B7DD5F3C53F528" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "10206E4E-2DC5-4EF9-98E1-4102D09D9283",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "55505DE6675E1AEB4CF72AD63A972936EC984D97" : "..\/..\/addons\/ofxImGui",
+    "CA29DB320F881B85D76220FC5498A4D1FA4F037C" : "..\/..\/addons\/ofxIO",
+    "6DFDEEAED5C97364A7A859C0B354E13F95C94005" : "..\/..\/addons\/ofxTime",
+    "CC64F4963C935629E4EEDB8221C0DA9B68D2313F" : "..\/..\/addons\/ofxMediaType",
+    "4401B78D6A43C47BEBBD941DAE88FAC3E6BE9980" : "..\/..\/addons\/ofxNetworkUtils",
+    "6DBA07F83F7AF99DB5F116332E6446603283BF4C" : "..\/..\/addons\/ofxHTTP",
+    "A82C0ABFD7ACBB96A8DACF462A005A3A654155C7" : "..\/..\/addons\/ofxSQLiteCpp",
+    "3CF3B4471C84DF2543AAA0AEAE2EC9F5FB1BB5AC" : "..\/..\/addons\/ofxJSONRPC",
+    "2DE9C8846D9375EAACFABA8963120E8E7719BAF5" : "..\/..",
+    "E79AC8F85D79EF0945F6D75FEF552EFB26F49E2C" : "..\/..\/addons\/ofxHPGL",
+    "A4B2B4422B32074CDD7FABA8BC493A66417E3647" : "..\/..\/addons\/ofxGeographicLib",
+    "6D6FDB373C9A9EB614FB047E30EC71CD5377F13C" : "..\/..\/addons\/ofxSSLManager",
+    "7ED0D15754D9EE08B829B967643A20055B98F6F4" : "..\/..\/addons\/ofxGeo",
+    "C08088D16AA20160C2DFA22579B7DD5F3C53F528" : "..\/..\/addons\/ofxHersheyFont"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Illw Plotter",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Illw Plotter.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/openframeworks\/openframeworks.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "2DE9C8846D9375EAACFABA8963120E8E7719BAF5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxJSONRPC",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3CF3B4471C84DF2543AAA0AEAE2EC9F5FB1BB5AC"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxNetworkUtils",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "4401B78D6A43C47BEBBD941DAE88FAC3E6BE9980"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/jvcleave\/ofxImGui.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "55505DE6675E1AEB4CF72AD63A972936EC984D97"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxSSLManager",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "6D6FDB373C9A9EB614FB047E30EC71CD5377F13C"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxHTTP",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "6DBA07F83F7AF99DB5F116332E6446603283BF4C"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxTime",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "6DFDEEAED5C97364A7A859C0B354E13F95C94005"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/olekristensen\/ofxGeo",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "7ED0D15754D9EE08B829B967643A20055B98F6F4"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxGeographicLib",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A4B2B4422B32074CDD7FABA8BC493A66417E3647"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxSQLiteCpp",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A82C0ABFD7ACBB96A8DACF462A005A3A654155C7"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/olekristensen\/ofxHersheyFont.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "C08088D16AA20160C2DFA22579B7DD5F3C53F528"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxIO",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "CA29DB320F881B85D76220FC5498A4D1FA4F037C"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/bakercp\/ofxMediaType",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "CC64F4963C935629E4EEDB8221C0DA9B68D2313F"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/NickHardeman\/ofxHPGL.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "E79AC8F85D79EF0945F6D75FEF552EFB26F49E2C"
+    }
+  ]
+}

@@ -82,8 +82,17 @@ var qrz = {
           var op = params.operator
           params.finalCallback(op)
         }
+        var error = params.responseXML.getElementsByTagName('Error')[0].childNodes[0].nodeValue
+        if(error == 'Session Timeout'){
+          qrz.key = ''
+          checkLogin (qrz.query({
+            'operator': params.operator,
+            'finalCallback': params.finalCallback
+          }))
+        }
         // Perform error handling from XML data
         console.log('Unhandled exception happened.')
+        console.log(params.responseXML)
       }
     } else if (params.operator) {
       if (qrz.key == '') {
@@ -186,9 +195,8 @@ function logOperator (dataKey, dataObj) {
         'continent': '',
         'coordinate': c
       }
-
-      addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'))
-      markLogged(dataKey, dataObj)
+      addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'), function(){markLogged(dataKey, dataObj)})
+      //markLogged(dataKey, dataObj)
     } else if (dataObj.gridsquare) {
       var value = dataObj.gridsquare
 
@@ -296,8 +304,8 @@ function logOperator (dataKey, dataObj) {
                 'continent': '',
                 'coordinate': c
               }
-              addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'))
-              markLogged(dataKey, dataObj)
+              addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'), function(){markLogged(dataKey, dataObj)})
+              //markLogged(dataKey, dataObj)
             } else {
                     // empty results from google
               var newLocation = {
@@ -308,8 +316,8 @@ function logOperator (dataKey, dataObj) {
                 'continent': '',
                 'coordinate': c
               }
-              addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'))
-              markLogged(dataKey, dataObj)
+              addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'), function(){markLogged(dataKey, dataObj)})
+              //markLogged(dataKey, dataObj)
             }
           } else {
                 // geocoding failed getting results from google, lets look for oceans
@@ -331,8 +339,8 @@ function logOperator (dataKey, dataObj) {
                       'continent': '',
                       'coordinate': c
                     }
-                    addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'))
-                    markLogged(dataKey, dataObj)
+                    addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'), function(){markLogged(dataKey, dataObj)})
+                    //markLogged(dataKey, dataObj)
                   })
                 })
               },
@@ -345,8 +353,8 @@ function logOperator (dataKey, dataObj) {
                   'continent': '',
                   'coordinate': c
                 }
-                addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'))
-                markLogged(dataKey, dataObj)
+                addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'), function(){markLogged(dataKey, dataObj)})
+                //markLogged(dataKey, dataObj)
               }
             })
           }
@@ -356,8 +364,30 @@ function logOperator (dataKey, dataObj) {
         alert('failed to locate')
       }
     } else if (dataObj.dxcc) {
-      // lookup in
-
+      alert('finding ' + dataObj.dxcc)
+      var dxcc = parseInt(dataObj.dxcc)
+      if(countries.hasOwnProperty(dxcc+'')){
+        var country = countries[dxcc+'']
+        c.lat = parseInt(country.Lat)
+        c.lon = parseInt(country.Long)
+        if(country.Lat.indexOf('S') >= 0) {
+          c.lat *= -1
+        }
+        if(country.Long.indexOf('W') >= 0) {
+          c.lon *= -1
+        }
+        console.log(c)
+        var newLocation = {
+          'illw': dataObj.call,
+          'name': '',
+          'country': country.Entity,
+          'dxcc': dataObj.dxcc,
+          'continent': country.Cont,
+          'coordinate': c
+        }
+        addLogEntry(newLocation, $('#locator-search .btn-add-log-entry'), function(){markLogged(dataKey, dataObj)})
+        //markLogged(dataKey, dataObj)
+      }
     }
   }
 }
@@ -368,6 +398,8 @@ var markLogged = function (dataKey, dataObj) {
     firebase.database().ref('log/' + dataKey).update({'logged': true})
   }
 }
+
+var countries = {}
 
 function init () {
     // Initialize Firebase
@@ -488,5 +520,12 @@ function checkLogin (callback) {
 }
 
 $(document).ready(function () {
-  checkLogin(init)
+  $.ajax({
+            url : "/js/dxcc.json",
+            dataType: "json",
+            success : function (data) {
+              countries = data
+              checkLogin(init)
+            }
+        })
 })

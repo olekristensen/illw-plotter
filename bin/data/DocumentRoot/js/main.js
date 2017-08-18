@@ -85,18 +85,14 @@ function onWebSocketError() {
     console.log('on error')
 }
 
-function addLogEntry(location, v) {
+function addLogEntry(location, v, callbackFunction) {
     var $this = $(this)
     JSONRPCClient.call('addLogEntry',
         location,
         function(result) {
             if (result != null) {
                 successAlert('<strong>' + result.destination.illw + '</strong> ' + result.destination.name + ' has been logged.')
-                hideSelection(v)
-                $(v).parent().parent().parent().find('input').val('')
-                $(v).parent().parent().parent().find('.location-search').val('').trigger('change')
-                $(v).parent().parent().parent().find('.location-search').select2('open')
-                $(v).parent().parent().parent().find('input').focus()
+                callbackFunction(v)
             }
         },
         function(error) {
@@ -147,6 +143,8 @@ function refreshLog() {
                         '<td>' + obj.destination.name + '</td>' +
                         '</tr>')
                     updateCompassArrow(obj)
+                    addMapMarker(obj)
+
                 })
                 $('#log >tbody tr.newRow').fadeIn(500, function() {
                     $('#log >tbody tr.newRow').removeClass('newRow')
@@ -165,10 +163,37 @@ function refreshLog() {
         })
 }
 
+function addMapMarker(obj){
+  if($('#map').length){
+    var latLng = new google.maps.LatLng(obj.destination.coordinate.lat,obj.destination.coordinate.lon);
+    var marker = new google.maps.Marker({
+      position: latLng,
+      map: map,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 5,
+        fillColor: 'yellow',
+        fillOpacity: 0.3,
+        strokeColor: 'yellow',
+        strokeWeight: 2
+      },
+      title: obj.destination.illw,
+      animation: google.maps.Animation.DROP
+    });
+    map.setCenter(latLng)
+  }
+}
+
 function initializeButtons() {
     $('.btn-add-log-entry').each(function(i, v) {
         $(v).on('click', function() {
-            addLogEntry(selectedLocation, v)
+            addLogEntry(selectedLocation, v, function(v){
+              hideSelection(v)
+              $(v).parent().parent().parent().find('input').val('')
+              $(v).parent().parent().parent().find('.location-search').val('').trigger('change')
+              $(v).parent().parent().parent().find('.location-search').select2('open')
+              $(v).parent().parent().parent().find('input').focus()
+            } )
         })
     })
 

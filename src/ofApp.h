@@ -1,4 +1,6 @@
 #pragma once
+#define TARGET_NO_SOUND 1
+#define OF_SOUND_PLAYER_QUICKTIME 1
 
 #include "ofMain.h"
 #include "ofxHPGL.h"
@@ -8,8 +10,8 @@
 #include "ofxImGui.h"
 #include "ofxJSONRPC.h"
 #include "ofxHersheyFont.h"
-#include "ofxIconvCpp.h"
 #include "ofxSQLiteCpp.h"
+#include "iconvpp/iconv.hpp"
 
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 

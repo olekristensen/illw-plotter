@@ -1,0 +1,3 @@
+[submodule "src/iconvpp"]
+	path = src/iconvpp
+	url = https://github.com/unnonouno/iconvpp
